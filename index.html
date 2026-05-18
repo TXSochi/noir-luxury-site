@@ -5,1568 +5,1174 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NOIR — The Art of Composition</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@100;200;300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@100;200;300;400&display=swap');
 
-  :root {
-    --gold: #C8A96E;
-    --gold-light: #E8D5A3;
-    --gold-dark: #8B6914;
-    --obsidian: #050505;
-    --charcoal: #0D0D0D;
-    --ash: #1A1A1A;
-    --smoke: #2A2A2A;
-    --mist: rgba(200,169,110,0.08);
-    --cream: #F5EDD6;
-  }
+:root {
+  --gold: #C8A96E;
+  --gold-light: #E8D5A3;
+  --gold-dark: #8B6914;
+  --obsidian: #050505;
+  --charcoal: #0A0A0A;
+  --cream: #F5EDD6;
+  --smoke-white: rgba(220,210,190,0.08);
+}
 
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html { scroll-behavior: smooth; }
+html { scroll-behavior: auto; }
 
-  body {
-    background: var(--obsidian);
-    color: var(--cream);
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 200;
-    overflow-x: hidden;
-    cursor: none;
-  }
+body {
+  background: var(--obsidian);
+  color: var(--cream);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 200;
+  overflow-x: hidden;
+  cursor: none;
+}
 
-  /* CUSTOM CURSOR */
-  #cursor {
-    position: fixed; top: 0; left: 0; z-index: 9999;
-    pointer-events: none;
-    mix-blend-mode: difference;
-  }
-  #cursor-dot {
-    width: 6px; height: 6px;
-    background: var(--gold);
-    border-radius: 50%;
-    position: absolute;
-    transform: translate(-50%,-50%);
-    transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease;
-  }
-  #cursor-ring {
-    width: 36px; height: 36px;
-    border: 1px solid rgba(200,169,110,0.5);
-    border-radius: 50%;
-    position: absolute;
-    transform: translate(-50%,-50%);
-    transition: transform 0.18s ease, width 0.4s ease, height 0.4s ease, border-color 0.4s ease;
-  }
-  body.hovering #cursor-dot { width: 10px; height: 10px; }
-  body.hovering #cursor-ring { width: 54px; height: 54px; border-color: var(--gold); }
+/* GRAIN */
+body::after {
+  content:''; position:fixed; inset:0; z-index:9999;
+  pointer-events:none; opacity:0.028;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:150px 150px;
+}
 
-  /* LOADING SCREEN */
-  #loader {
-    position: fixed; inset: 0; z-index: 8000;
-    background: var(--obsidian);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    transition: opacity 1.2s ease, visibility 1.2s ease;
-  }
-  #loader.hidden { opacity: 0; visibility: hidden; }
-  #loader-line {
-    width: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    margin-bottom: 32px;
-    transition: width 2s cubic-bezier(0.4,0,0.2,1);
-  }
-  #loader-text {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(10px, 1.2vw, 14px);
-    letter-spacing: 0.4em;
-    color: var(--gold);
-    opacity: 0;
-    animation: fadeIn 0.8s 0.5s forwards;
-  }
-  #loader-brand {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(48px, 8vw, 96px);
-    font-weight: 300;
-    letter-spacing: 0.25em;
-    color: var(--gold);
-    margin-bottom: 16px;
-    opacity: 0;
-    animation: fadeIn 1s 0.2s forwards;
-  }
+/* CURSOR */
+#cur { position:fixed; top:0; left:0; z-index:9998; pointer-events:none; }
+#cur-dot { width:5px; height:5px; background:var(--gold); border-radius:50%; position:absolute; transform:translate(-50%,-50%); transition:width .25s,height .25s; }
+#cur-ring { width:32px; height:32px; border:1px solid rgba(200,169,110,.45); border-radius:50%; position:absolute; transform:translate(-50%,-50%); transition:width .4s,height .4s,border-color .4s; }
+body.hov #cur-dot { width:8px; height:8px; }
+body.hov #cur-ring { width:50px; height:50px; border-color:var(--gold); }
 
-  /* NAVIGATION */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-    padding: 32px 60px;
-    display: flex; align-items: center; justify-content: space-between;
-    background: linear-gradient(180deg, rgba(5,5,5,0.9) 0%, transparent 100%);
-    transition: all 0.6s ease;
-  }
-  nav.scrolled { padding: 20px 60px; background: rgba(5,5,5,0.95); backdrop-filter: blur(20px); }
-  .nav-brand {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 22px; font-weight: 300;
-    letter-spacing: 0.35em;
-    color: var(--gold);
-    text-decoration: none;
-  }
-  .nav-links { display: flex; gap: 48px; list-style: none; }
-  .nav-links a {
-    font-size: 10px; font-weight: 300;
-    letter-spacing: 0.3em; text-transform: uppercase;
-    color: rgba(245,237,214,0.6);
-    text-decoration: none;
-    transition: color 0.3s ease;
-    position: relative;
-  }
-  .nav-links a::after {
-    content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
-    height: 1px; background: var(--gold);
-    transform: scaleX(0); transition: transform 0.4s ease;
-  }
-  .nav-links a:hover { color: var(--gold); }
-  .nav-links a:hover::after { transform: scaleX(1); }
-  .nav-cta {
-    font-size: 10px; font-weight: 300;
-    letter-spacing: 0.3em; text-transform: uppercase;
-    color: var(--gold); border: 1px solid var(--gold);
-    padding: 10px 24px; text-decoration: none;
-    transition: all 0.4s ease;
-  }
-  .nav-cta:hover { background: var(--gold); color: var(--obsidian); }
+/* 3D CANVAS — PERSISTENT FULL SCREEN */
+#three-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
 
-  /* HERO */
-  #hero {
-    height: 100vh;
-    position: relative;
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden;
-  }
+/* SCROLL CONTAINER */
+#scroll-root {
+  position: relative;
+  z-index: 2;
+}
 
-  /* 3D CANVAS */
-  #hero-canvas {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-  }
+/* AGE GATE */
+#age-gate {
+  position:fixed; inset:0; z-index:9500;
+  background:var(--obsidian);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center;
+  padding:40px;
+}
+#age-gate.gone { display:none; }
+.ag-brand { font-family:'Cormorant Garamond',serif; font-size:clamp(56px,9vw,112px); font-weight:300; letter-spacing:.3em; color:var(--gold); }
+.ag-line { width:1px; height:60px; background:linear-gradient(180deg,var(--gold),transparent); margin:24px auto; }
+.ag-q { font-family:'Cormorant Garamond',serif; font-size:clamp(18px,2.5vw,28px); font-weight:300; font-style:italic; color:rgba(245,237,214,.7); margin-bottom:48px; }
+.ag-btns { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
+.ag-btn { padding:13px 44px; font-family:'Montserrat',sans-serif; font-size:9px; font-weight:300; letter-spacing:.35em; text-transform:uppercase; cursor:pointer; border:1px solid rgba(200,169,110,.4); background:transparent; color:var(--gold); transition:all .4s; }
+.ag-btn.yes { background:var(--gold); color:var(--obsidian); border-color:var(--gold); }
+.ag-btn:hover:not(.yes) { background:rgba(200,169,110,.08); }
+.ag-warn { font-size:10px; font-weight:200; color:rgba(245,237,214,.2); line-height:1.9; margin-top:48px; max-width:420px; letter-spacing:.04em; }
 
-  .hero-content {
-    position: relative; z-index: 10;
-    text-align: center;
-    pointer-events: none;
-  }
-  .hero-eyebrow {
-    font-size: 10px; font-weight: 300;
-    letter-spacing: 0.6em; text-transform: uppercase;
-    color: var(--gold); margin-bottom: 24px;
-    opacity: 0; animation: slideUp 1s 2.8s forwards;
-  }
-  .hero-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(64px, 10vw, 140px);
-    font-weight: 300; line-height: 0.9;
-    letter-spacing: 0.05em;
-    opacity: 0; animation: slideUp 1.2s 3s forwards;
-  }
-  .hero-title em { font-style: italic; color: var(--gold); }
-  .hero-subtitle {
-    font-size: clamp(11px, 1.2vw, 13px); font-weight: 200;
-    letter-spacing: 0.4em; text-transform: uppercase;
-    color: rgba(245,237,214,0.5);
-    margin-top: 32px;
-    opacity: 0; animation: slideUp 1s 3.2s forwards;
-  }
-  .hero-scroll {
-    position: absolute; bottom: 48px; left: 50%;
-    transform: translateX(-50%);
-    display: flex; flex-direction: column; align-items: center; gap: 12px;
-    opacity: 0; animation: fadeIn 1s 3.8s forwards;
-  }
-  .hero-scroll span {
-    font-size: 9px; letter-spacing: 0.4em;
-    text-transform: uppercase; color: rgba(200,169,110,0.5);
-  }
-  .scroll-line {
-    width: 1px; height: 60px;
-    background: linear-gradient(180deg, var(--gold), transparent);
-    animation: scrollPulse 2s ease-in-out infinite;
-  }
+/* LOADER */
+#loader {
+  position:fixed; inset:0; z-index:9000;
+  background:var(--obsidian);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  transition:opacity 1.4s ease, visibility 1.4s ease;
+}
+#loader.out { opacity:0; visibility:hidden; }
+.ld-brand { font-family:'Cormorant Garamond',serif; font-size:clamp(52px,8vw,104px); font-weight:300; letter-spacing:.3em; color:var(--gold); opacity:0; animation:fadeUp 1s .2s both; }
+.ld-bar-wrap { width:220px; height:1px; background:rgba(200,169,110,.15); margin:28px 0 20px; overflow:hidden; }
+.ld-bar { height:100%; background:linear-gradient(90deg,transparent,var(--gold),transparent); width:0; transition:width 2.2s cubic-bezier(.4,0,.2,1); }
+.ld-txt { font-size:9px; letter-spacing:.45em; text-transform:uppercase; color:rgba(200,169,110,.5); opacity:0; animation:fadeUp .8s .5s both; }
 
-  /* SECTIONS */
-  section { position: relative; }
+/* NAV */
+nav {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  padding:30px 60px;
+  display:flex; align-items:center; justify-content:space-between;
+  transition:padding .5s, background .5s, backdrop-filter .5s;
+}
+nav.scrolled { padding:18px 60px; background:rgba(5,5,5,.92); backdrop-filter:blur(24px); border-bottom:1px solid rgba(200,169,110,.07); }
+.nav-logo { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:300; letter-spacing:.38em; color:var(--gold); text-decoration:none; }
+.nav-links { display:flex; gap:44px; list-style:none; }
+.nav-links a { font-size:9px; font-weight:300; letter-spacing:.3em; text-transform:uppercase; color:rgba(245,237,214,.5); text-decoration:none; position:relative; transition:color .3s; }
+.nav-links a::after { content:''; position:absolute; bottom:-3px; left:0; right:0; height:1px; background:var(--gold); transform:scaleX(0); transform-origin:left; transition:transform .4s ease; }
+.nav-links a:hover { color:var(--gold); }
+.nav-links a:hover::after { transform:scaleX(1); }
+.nav-reserve { font-size:9px; font-weight:300; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); border:1px solid rgba(200,169,110,.4); padding:9px 22px; text-decoration:none; transition:all .4s; }
+.nav-reserve:hover { background:var(--gold); color:var(--obsidian); }
 
-  /* DIVIDER */
-  .section-divider {
-    width: 100%; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold-dark), var(--gold), var(--gold-dark), transparent);
-    opacity: 0.3;
-  }
+/* SECTIONS */
+.scene {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
 
-  /* CHAPTER LABEL */
-  .chapter-label {
-    font-size: 9px; font-weight: 300;
-    letter-spacing: 0.5em; text-transform: uppercase;
-    color: var(--gold);
-    display: flex; align-items: center; gap: 16px;
-  }
-  .chapter-label::before {
-    content: ''; display: block;
-    width: 40px; height: 1px; background: var(--gold);
-  }
+/* HERO */
+#s-hero {
+  height: 100vh;
+  justify-content: center;
+  text-align: center;
+}
+.hero-inner { position:relative; z-index:5; pointer-events:none; }
+.hero-eyebrow { font-size:9px; letter-spacing:.6em; text-transform:uppercase; color:var(--gold); margin-bottom:28px; opacity:0; animation:fadeUp 1s 3s both; }
+.hero-h1 { font-family:'Cormorant Garamond',serif; font-size:clamp(68px,11vw,152px); font-weight:300; line-height:.88; letter-spacing:.04em; opacity:0; animation:fadeUp 1.2s 3.1s both; }
+.hero-h1 em { font-style:italic; color:var(--gold); }
+.hero-sub { font-size:11px; letter-spacing:.45em; text-transform:uppercase; color:rgba(245,237,214,.4); margin-top:36px; opacity:0; animation:fadeUp 1s 3.3s both; }
+.hero-scroll-cue { position:absolute; bottom:44px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:10px; opacity:0; animation:fadeUp 1s 3.8s both; }
+.hero-scroll-cue span { font-size:8px; letter-spacing:.5em; text-transform:uppercase; color:rgba(200,169,110,.4); }
+.scroll-stem { width:1px; height:54px; background:linear-gradient(180deg,var(--gold),transparent); animation:stemPulse 2.2s ease-in-out infinite; }
 
-  /* PARALLAX REVEAL */
-  .reveal {
-    opacity: 0; transform: translateY(60px);
-    transition: opacity 0.9s ease, transform 0.9s ease;
-  }
-  .reveal.visible { opacity: 1; transform: translateY(0); }
-  .reveal-delay-1 { transition-delay: 0.15s; }
-  .reveal-delay-2 { transition-delay: 0.3s; }
-  .reveal-delay-3 { transition-delay: 0.45s; }
+/* MARQUEE */
+.marquee-band {
+  position: relative; z-index:5;
+  overflow:hidden; padding:28px 0;
+  border-top:1px solid rgba(200,169,110,.08);
+  border-bottom:1px solid rgba(200,169,110,.08);
+  background:rgba(8,6,2,.6);
+  backdrop-filter:blur(8px);
+}
+.marquee-track { display:flex; gap:72px; animation:marquee 32s linear infinite; white-space:nowrap; }
+.m-item { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:300; font-style:italic; color:rgba(200,169,110,.28); letter-spacing:.1em; flex-shrink:0; }
+.m-dot { color:rgba(200,169,110,.5); font-style:normal; margin:0 -32px; }
 
-  /* SECTION — ORIGIN */
-  #origin {
-    min-height: 100vh;
-    display: grid; grid-template-columns: 1fr 1fr;
-    align-items: center;
-    padding: 120px 80px;
-    gap: 80px;
-    background: linear-gradient(135deg, var(--obsidian) 0%, var(--charcoal) 50%, var(--obsidian) 100%);
-  }
-  .origin-visual {
-    position: relative;
-    aspect-ratio: 3/4;
-    overflow: hidden;
-  }
-  .origin-canvas-wrap {
-    width: 100%; height: 100%;
-    position: relative;
-  }
-  #cigarette-canvas {
-    width: 100%; height: 100%;
-    display: block;
-  }
-  .origin-frame {
-    position: absolute; inset: 0;
-    border: 1px solid rgba(200,169,110,0.2);
-    pointer-events: none;
-  }
-  .origin-frame::before {
-    content: ''; position: absolute;
-    top: -1px; left: 20px; right: 20px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  }
-  .origin-frame::after {
-    content: ''; position: absolute;
-    bottom: -1px; left: 20px; right: 20px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  }
-  .origin-text { padding: 40px 0; }
-  .origin-heading {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(42px, 5vw, 72px);
-    font-weight: 300; line-height: 1.1;
-    margin: 24px 0 32px;
-  }
-  .origin-heading em { font-style: italic; color: var(--gold); }
-  .origin-body {
-    font-size: 14px; font-weight: 200;
-    line-height: 2; color: rgba(245,237,214,0.6);
-    max-width: 440px;
-  }
-  .origin-stat {
-    margin-top: 56px;
-    display: flex; gap: 48px;
-  }
-  .stat-item {}
-  .stat-num {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 48px; font-weight: 300;
-    color: var(--gold); line-height: 1;
-  }
-  .stat-label {
-    font-size: 9px; letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: rgba(245,237,214,0.4);
-    margin-top: 6px;
-  }
+/* ORIGIN */
+#s-origin {
+  min-height:100vh;
+  padding:130px 0;
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:0; align-items:center;
+}
+.origin-pad-l { padding:0 80px 0 100px; }
+.origin-pad-r { padding:0 100px 0 80px; }
+.sec-eyebrow { display:flex; align-items:center; gap:16px; font-size:8px; letter-spacing:.5em; text-transform:uppercase; color:var(--gold); margin-bottom:28px; }
+.sec-eyebrow::before { content:''; display:block; width:36px; height:1px; background:var(--gold); flex-shrink:0; }
+.sec-h2 { font-family:'Cormorant Garamond',serif; font-size:clamp(40px,5vw,70px); font-weight:300; line-height:1.06; margin-bottom:32px; }
+.sec-h2 em { font-style:italic; color:var(--gold); }
+.sec-body { font-size:13px; font-weight:200; line-height:2.1; color:rgba(245,237,214,.55); max-width:460px; }
+.sec-body + .sec-body { margin-top:18px; }
+.stat-row { display:flex; gap:44px; margin-top:56px; }
+.stat-num { font-family:'Cormorant Garamond',serif; font-size:52px; font-weight:300; color:var(--gold); line-height:1; }
+.stat-lbl { font-size:8px; letter-spacing:.3em; text-transform:uppercase; color:rgba(245,237,214,.35); margin-top:6px; }
 
-  /* SMOKE SECTION */
-  #smoke-section {
-    height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    position: relative; overflow: hidden;
-    background: var(--obsidian);
-  }
-  #smoke-canvas-full { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .smoke-text {
-    position: relative; z-index: 10;
-    text-align: center; pointer-events: none;
-  }
-  .smoke-quote {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(28px, 4vw, 56px);
-    font-weight: 300; font-style: italic;
-    line-height: 1.4; max-width: 800px;
-    color: rgba(245,237,214,0.9);
-  }
-  .smoke-quote em { color: var(--gold); font-style: normal; }
-  .smoke-attr {
-    margin-top: 32px; font-size: 10px;
-    letter-spacing: 0.5em; text-transform: uppercase;
-    color: rgba(200,169,110,0.5);
-  }
+/* ORIGIN VISUAL PLACEHOLDER (3D takes this space) */
+.origin-visual-zone {
+  aspect-ratio:3/4;
+  position:relative;
+  display:flex; align-items:center; justify-content:center;
+}
+.zone-frame {
+  position:absolute; inset:20px;
+  border:1px solid rgba(200,169,110,.12);
+  pointer-events:none;
+}
+.zone-frame::before { content:''; position:absolute; top:-1px; left:30px; right:30px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+.zone-frame::after { content:''; position:absolute; bottom:-1px; left:30px; right:30px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
 
-  /* COLLECTION */
-  #collection {
-    min-height: 100vh; padding: 120px 80px;
-    background: linear-gradient(180deg, var(--obsidian) 0%, #080808 100%);
-  }
-  .collection-header {
-    text-align: center; margin-bottom: 100px;
-  }
-  .collection-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(48px, 7vw, 96px);
-    font-weight: 300; margin: 24px 0;
-  }
-  .collection-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2px;
-  }
-  .product-card {
-    position: relative; aspect-ratio: 2/3;
-    overflow: hidden; cursor: pointer;
-    background: var(--ash);
-  }
-  .product-card canvas { width: 100%; height: 100%; display: block; }
-  .product-overlay {
-    position: absolute; inset: 0;
-    background: linear-gradient(0deg, rgba(5,5,5,0.9) 0%, transparent 50%);
-    display: flex; flex-direction: column;
-    justify-content: flex-end; padding: 32px;
-    transform: translateY(0); transition: all 0.6s cubic-bezier(0.4,0,0.2,1);
-  }
-  .product-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 28px; font-weight: 300; color: var(--cream);
-    margin-bottom: 4px;
-  }
-  .product-note {
-    font-size: 10px; letter-spacing: 0.3em;
-    color: var(--gold); text-transform: uppercase;
-  }
-  .product-desc {
-    font-size: 12px; font-weight: 200;
-    color: rgba(245,237,214,0.6); line-height: 1.7;
-    margin-top: 16px; max-height: 0; overflow: hidden;
-    transition: max-height 0.6s ease;
-  }
-  .product-card:hover .product-desc { max-height: 80px; }
-  .product-card::after {
-    content: ''; position: absolute; inset: 0;
-    border: 1px solid transparent;
-    transition: border-color 0.4s ease;
-  }
-  .product-card:hover::after { border-color: rgba(200,169,110,0.3); }
+/* SMOKE INTERLUDE */
+#s-smoke {
+  height:100vh;
+  justify-content:center; text-align:center;
+  background:transparent;
+}
+.smoke-inner { position:relative; z-index:5; pointer-events:none; max-width:820px; padding:0 40px; }
+.smoke-quote { font-family:'Cormorant Garamond',serif; font-size:clamp(26px,3.5vw,52px); font-weight:300; font-style:italic; line-height:1.45; color:rgba(245,237,214,.85); }
+.smoke-quote strong { color:var(--gold); font-style:normal; font-weight:300; }
+.smoke-rule { width:56px; height:1px; background:var(--gold); margin:32px auto; opacity:.4; }
+.smoke-attr { font-size:9px; letter-spacing:.5em; text-transform:uppercase; color:rgba(200,169,110,.4); }
 
-  /* RITUAL SECTION */
-  #ritual {
-    min-height: 100vh;
-    padding: 120px 80px;
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 120px; align-items: center;
-    background: var(--charcoal);
-  }
-  .ritual-text {}
-  .ritual-heading {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(42px, 5vw, 72px);
-    font-weight: 300; line-height: 1.1;
-    margin: 24px 0 32px;
-  }
-  .ritual-heading em { font-style: italic; color: var(--gold); }
-  .ritual-steps { margin-top: 56px; }
-  .ritual-step {
-    display: flex; gap: 24px;
-    padding: 32px 0; border-bottom: 1px solid rgba(200,169,110,0.1);
-    cursor: pointer; transition: all 0.4s ease;
-  }
-  .ritual-step:hover { border-color: rgba(200,169,110,0.3); }
-  .step-num {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 56px; font-weight: 300;
-    color: rgba(200,169,110,0.15);
-    line-height: 1; flex-shrink: 0;
-    transition: color 0.4s ease;
-  }
-  .ritual-step:hover .step-num { color: var(--gold); }
-  .step-content {}
-  .step-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 22px; font-weight: 300; color: var(--cream);
-    margin-bottom: 8px;
-  }
-  .step-desc {
-    font-size: 13px; font-weight: 200;
-    color: rgba(245,237,214,0.5); line-height: 1.8;
-  }
-  .ritual-visual {
-    position: relative; aspect-ratio: 1;
-  }
-  #ritual-canvas { width: 100%; height: 100%; display: block; }
+/* COLLECTION */
+#s-collection {
+  min-height:100vh;
+  padding:120px 80px;
+  display:block;
+}
+.col-header { text-align:center; margin-bottom:90px; }
+.col-h2 { font-family:'Cormorant Garamond',serif; font-size:clamp(48px,7vw,96px); font-weight:300; margin:20px 0 12px; }
+.col-sub { font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:rgba(245,237,214,.35); }
+.col-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; }
+.prod-card {
+  position:relative; aspect-ratio:2/3;
+  background:var(--charcoal);
+  overflow:hidden; cursor:pointer;
+  transition:transform .6s cubic-bezier(.4,0,.2,1);
+}
+.prod-card:hover { transform:scale(1.01); }
+.prod-bg {
+  position:absolute; inset:0;
+  transition:transform .8s cubic-bezier(.4,0,.2,1);
+}
+.prod-card:hover .prod-bg { transform:scale(1.04); }
+.prod-bg-1 { background:radial-gradient(ellipse at 50% 30%, #1a1208 0%, #050505 70%); }
+.prod-bg-2 { background:radial-gradient(ellipse at 50% 30%, #0f1008 0%, #050505 70%); }
+.prod-bg-3 { background:radial-gradient(ellipse at 50% 30%, #100808 0%, #050505 70%); }
+.prod-glow { position:absolute; inset:0; opacity:.6; transition:opacity .6s; }
+.prod-card:hover .prod-glow { opacity:1; }
+.prod-glow-1 { background:radial-gradient(ellipse at 50% 40%, rgba(200,169,110,.07) 0%, transparent 65%); }
+.prod-glow-2 { background:radial-gradient(ellipse at 50% 40%, rgba(180,200,170,.05) 0%, transparent 65%); }
+.prod-glow-3 { background:radial-gradient(ellipse at 50% 40%, rgba(180,80,60,.07) 0%, transparent 65%); }
+.prod-canvas-wrap { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+.prod-cig-canvas { width:100%; height:100%; }
+.prod-overlay { position:absolute; inset:0; background:linear-gradient(0deg,rgba(5,5,5,.92) 0%,rgba(5,5,5,.2) 45%,transparent 70%); display:flex; flex-direction:column; justify-content:flex-end; padding:32px; }
+.prod-badge { font-size:8px; letter-spacing:.35em; text-transform:uppercase; color:var(--gold); margin-bottom:6px; }
+.prod-name { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:300; color:var(--cream); margin-bottom:0; }
+.prod-desc { font-size:11px; font-weight:200; line-height:1.8; color:rgba(245,237,214,.5); margin-top:12px; max-height:0; overflow:hidden; transition:max-height .6s ease, opacity .6s; opacity:0; }
+.prod-card:hover .prod-desc { max-height:100px; opacity:1; }
+.prod-border { position:absolute; inset:0; border:1px solid transparent; transition:border-color .5s; pointer-events:none; }
+.prod-card:hover .prod-border { border-color:rgba(200,169,110,.25); }
 
-  /* MANIFESTO */
-  #manifesto {
-    min-height: 100vh;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 120px 80px;
-    position: relative; overflow: hidden;
-    background: var(--obsidian);
-  }
-  .manifesto-bg {
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 50% 50%, rgba(200,169,110,0.05) 0%, transparent 70%);
-  }
-  .manifesto-lines {
-    position: absolute; inset: 0;
-    background-image:
-      linear-gradient(rgba(200,169,110,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(200,169,110,0.03) 1px, transparent 1px);
-    background-size: 80px 80px;
-  }
-  .manifesto-content {
-    position: relative; z-index: 10;
-    text-align: center; max-width: 900px;
-  }
-  .manifesto-heading {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(48px, 7vw, 96px);
-    font-weight: 300; line-height: 1;
-    margin: 24px 0;
-  }
-  .manifesto-heading .line { display: block; overflow: hidden; }
-  .manifesto-heading .line span { display: block; transform: translateY(100%); transition: transform 0.9s cubic-bezier(0.4,0,0.2,1); }
-  .manifesto-heading.visible .line span { transform: translateY(0); }
-  .manifesto-heading.visible .line:nth-child(2) span { transition-delay: 0.1s; }
-  .manifesto-heading.visible .line:nth-child(3) span { transition-delay: 0.2s; }
-  .manifesto-body {
-    font-size: 15px; font-weight: 200;
-    line-height: 2.2; color: rgba(245,237,214,0.5);
-    max-width: 640px; margin: 40px auto 0;
-  }
-  .manifesto-cta {
-    display: inline-block; margin-top: 56px;
-    font-size: 10px; font-weight: 300;
-    letter-spacing: 0.4em; text-transform: uppercase;
-    color: var(--gold); border: 1px solid rgba(200,169,110,0.4);
-    padding: 18px 48px; text-decoration: none;
-    transition: all 0.5s ease; position: relative; overflow: hidden;
-  }
-  .manifesto-cta::before {
-    content: ''; position: absolute;
-    top: 0; left: -100%; width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(200,169,110,0.1), transparent);
-    transition: left 0.6s ease;
-  }
-  .manifesto-cta:hover::before { left: 100%; }
-  .manifesto-cta:hover { border-color: var(--gold); box-shadow: 0 0 40px rgba(200,169,110,0.1); }
+/* RITUAL */
+#s-ritual {
+  min-height:100vh;
+  padding:120px 0;
+  display:grid; grid-template-columns:1fr 1fr;
+  align-items:center;
+}
+.ritual-left { padding:0 80px 0 100px; }
+.ritual-steps { margin-top:60px; }
+.r-step { display:flex; gap:24px; padding:28px 0; border-bottom:1px solid rgba(200,169,110,.08); cursor:pointer; transition:border-color .4s; }
+.r-step:hover { border-color:rgba(200,169,110,.3); }
+.r-num { font-family:'Cormorant Garamond',serif; font-size:52px; font-weight:300; color:rgba(200,169,110,.1); line-height:1; flex-shrink:0; width:56px; transition:color .5s; }
+.r-step:hover .r-num { color:var(--gold); }
+.r-title { font-family:'Cormorant Garamond',serif; font-size:21px; font-weight:300; color:var(--cream); margin-bottom:8px; }
+.r-desc { font-size:12px; font-weight:200; color:rgba(245,237,214,.45); line-height:1.85; }
+.ritual-right { padding:0 100px 0 80px; display:flex; flex-direction:column; gap:32px; }
+.ritual-visual-zone { aspect-ratio:1; position:relative; border:1px solid rgba(200,169,110,.08); }
 
-  /* FOOTER */
-  footer {
-    padding: 80px;
-    background: var(--obsidian);
-    border-top: 1px solid rgba(200,169,110,0.1);
-    display: grid; grid-template-columns: 1fr 1fr 1fr;
-    gap: 60px; align-items: start;
-  }
-  .footer-brand {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 32px; font-weight: 300;
-    letter-spacing: 0.3em; color: var(--gold);
-  }
-  .footer-tagline {
-    font-size: 11px; font-weight: 200;
-    letter-spacing: 0.3em; text-transform: uppercase;
-    color: rgba(245,237,214,0.3); margin-top: 8px;
-  }
-  .footer-col-title {
-    font-size: 9px; letter-spacing: 0.4em;
-    text-transform: uppercase; color: var(--gold);
-    margin-bottom: 24px;
-  }
-  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 12px; }
-  .footer-links a {
-    font-size: 12px; font-weight: 200;
-    color: rgba(245,237,214,0.4); text-decoration: none;
-    transition: color 0.3s ease;
-    letter-spacing: 0.05em;
-  }
-  .footer-links a:hover { color: var(--gold); }
-  .footer-bottom {
-    grid-column: 1/-1; border-top: 1px solid rgba(200,169,110,0.1);
-    padding-top: 32px; display: flex;
-    justify-content: space-between; align-items: center;
-  }
-  .footer-legal {
-    font-size: 10px; font-weight: 200;
-    color: rgba(245,237,214,0.25); letter-spacing: 0.05em;
-    line-height: 1.8;
-  }
-  .footer-age {
-    font-size: 10px; font-weight: 300;
-    color: rgba(200,169,110,0.4); letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
+/* MANIFESTO */
+#s-manifesto {
+  min-height:100vh;
+  align-items:center; justify-content:center;
+  text-align:center;
+  padding:120px 40px;
+}
+.manifesto-inner { position:relative; z-index:5; max-width:960px; }
+.manifesto-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(200,169,110,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(200,169,110,.025) 1px,transparent 1px); background-size:72px 72px; pointer-events:none; }
+.m-h2 { font-family:'Cormorant Garamond',serif; font-size:clamp(52px,8vw,110px); font-weight:300; line-height:.95; margin:24px 0; }
+.m-h2 .g { display:block; overflow:hidden; }
+.m-h2 .g span { display:block; transform:translateY(105%); transition:transform 1s cubic-bezier(.4,0,.2,1); }
+.m-h2.vis .g span { transform:translateY(0); }
+.m-h2.vis .g:nth-child(2) span { transition-delay:.12s; }
+.m-h2.vis .g:nth-child(3) span { transition-delay:.24s; }
+.m-h2 em { font-style:italic; color:var(--gold); }
+.m-body { font-size:14px; font-weight:200; line-height:2.3; color:rgba(245,237,214,.45); max-width:620px; margin:40px auto 0; }
+.m-cta { display:inline-block; margin-top:56px; font-size:9px; font-weight:300; letter-spacing:.4em; text-transform:uppercase; color:var(--gold); border:1px solid rgba(200,169,110,.35); padding:16px 46px; text-decoration:none; transition:all .5s; position:relative; overflow:hidden; }
+.m-cta::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(200,169,110,.1),transparent); transition:left .6s; }
+.m-cta:hover::before { left:100%; }
+.m-cta:hover { border-color:var(--gold); box-shadow:0 0 50px rgba(200,169,110,.08); }
 
-  /* SCROLLBAR */
-  ::-webkit-scrollbar { width: 2px; }
-  ::-webkit-scrollbar-track { background: var(--obsidian); }
-  ::-webkit-scrollbar-thumb { background: var(--gold-dark); }
+/* FOOTER */
+footer {
+  position:relative; z-index:5;
+  padding:80px 100px;
+  border-top:1px solid rgba(200,169,110,.08);
+  display:grid; grid-template-columns:1.2fr 1fr 1fr;
+  gap:60px; align-items:start;
+  background:rgba(5,5,5,.97);
+}
+.ft-brand { font-family:'Cormorant Garamond',serif; font-size:34px; font-weight:300; letter-spacing:.3em; color:var(--gold); }
+.ft-tag { font-size:9px; letter-spacing:.3em; text-transform:uppercase; color:rgba(245,237,214,.25); margin-top:8px; }
+.ft-col-t { font-size:8px; letter-spacing:.4em; text-transform:uppercase; color:var(--gold); margin-bottom:22px; }
+.ft-links { list-style:none; display:flex; flex-direction:column; gap:11px; }
+.ft-links a { font-size:11px; font-weight:200; color:rgba(245,237,214,.35); text-decoration:none; transition:color .3s; letter-spacing:.05em; }
+.ft-links a:hover { color:var(--gold); }
+.ft-bottom { grid-column:1/-1; border-top:1px solid rgba(200,169,110,.08); padding-top:28px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+.ft-legal { font-size:9px; font-weight:200; color:rgba(245,237,214,.2); letter-spacing:.04em; line-height:1.9; }
+.ft-age { font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:rgba(200,169,110,.35); }
 
-  /* HORIZONTAL MARQUEE */
-  .marquee-wrap {
-    overflow: hidden; padding: 32px 0;
-    border-top: 1px solid rgba(200,169,110,0.1);
-    border-bottom: 1px solid rgba(200,169,110,0.1);
-    background: var(--charcoal);
-  }
-  .marquee-track {
-    display: flex; gap: 80px;
-    animation: marquee 30s linear infinite;
-    white-space: nowrap;
-  }
-  .marquee-item {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 18px; font-weight: 300; font-style: italic;
-    color: rgba(200,169,110,0.3); letter-spacing: 0.1em;
-    flex-shrink: 0;
-  }
-  .marquee-dot {
-    color: var(--gold); margin: 0 -40px; font-style: normal;
-  }
+/* SCROLL PROGRESS */
+#progress-bar { position:fixed; top:0; left:0; height:1px; background:linear-gradient(90deg,var(--gold-dark),var(--gold)); z-index:200; transition:width .1s linear; width:0%; }
 
-  /* ANIMATIONS */
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes scrollPulse { 0%, 100% { opacity: 0.4; transform: scaleY(1); } 50% { opacity: 1; transform: scaleY(1.2); } }
-  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-  @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-20px) rotate(1deg); } }
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
+/* SCROLL INDICATOR */
+#scene-indicator {
+  position:fixed; right:32px; top:50%; transform:translateY(-50%);
+  z-index:100; display:flex; flex-direction:column; gap:10px;
+}
+.si-dot { width:4px; height:4px; border-radius:50%; border:1px solid rgba(200,169,110,.3); transition:all .4s; cursor:pointer; }
+.si-dot.active { background:var(--gold); border-color:var(--gold); transform:scale(1.5); }
 
-  /* NOISE GRAIN OVERLAY */
-  body::before {
-    content: ''; position: fixed; inset: 0; z-index: 9000;
-    pointer-events: none; opacity: 0.025;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    background-size: 128px 128px;
-  }
+/* REVEAL */
+.rv { opacity:0; transform:translateY(50px); transition:opacity .9s ease, transform .9s ease; }
+.rv.vis { opacity:1; transform:translateY(0); }
+.rv.d1 { transition-delay:.15s; }
+.rv.d2 { transition-delay:.3s; }
+.rv.d3 { transition-delay:.45s; }
 
-  /* AGE GATE */
-  #age-gate {
-    position: fixed; inset: 0; z-index: 9500;
-    background: var(--obsidian);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    text-align: center;
-  }
-  #age-gate.hidden { display: none; }
-  .age-brand {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(48px, 8vw, 96px);
-    font-weight: 300; letter-spacing: 0.3em; color: var(--gold);
-    margin-bottom: 16px;
-  }
-  .age-question {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(20px, 3vw, 32px);
-    font-weight: 300; font-style: italic;
-    color: rgba(245,237,214,0.7);
-    margin-bottom: 48px;
-  }
-  .age-buttons { display: flex; gap: 24px; }
-  .age-btn {
-    padding: 14px 48px; font-size: 10px; font-weight: 300;
-    letter-spacing: 0.3em; text-transform: uppercase;
-    cursor: pointer; border: 1px solid rgba(200,169,110,0.4);
-    background: transparent; color: var(--gold);
-    transition: all 0.4s ease;
-    font-family: 'Montserrat', sans-serif;
-  }
-  .age-btn.primary { background: var(--gold); color: var(--obsidian); }
-  .age-btn:hover:not(.primary) { background: rgba(200,169,110,0.1); }
-  .age-warning {
-    font-size: 10px; font-weight: 200;
-    color: rgba(245,237,214,0.2); letter-spacing: 0.1em;
-    margin-top: 48px; max-width: 400px; line-height: 1.8;
-  }
+/* SCROLLBAR */
+::-webkit-scrollbar { width:2px; }
+::-webkit-scrollbar-track { background:var(--obsidian); }
+::-webkit-scrollbar-thumb { background:var(--gold-dark); }
 
-  .gold-line {
-    width: 60px; height: 1px;
-    background: var(--gold); margin: 32px auto;
-    opacity: 0.4;
-  }
+@keyframes fadeUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+@keyframes stemPulse { 0%,100% { opacity:.4; transform:scaleY(1); } 50% { opacity:1; transform:scaleY(1.15); } }
+@keyframes marquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+
+@media (max-width:768px) {
+  nav { padding:20px 24px; }
+  nav.scrolled { padding:14px 24px; }
+  .nav-links, .nav-reserve { display:none; }
+  #s-origin { grid-template-columns:1fr; padding:80px 0; }
+  .origin-pad-l, .origin-pad-r { padding:0 28px; }
+  .origin-visual-zone { display:none; }
+  #s-ritual { grid-template-columns:1fr; }
+  .ritual-left { padding:0 28px; }
+  .ritual-right { display:none; }
+  .col-grid { grid-template-columns:1fr; }
+  footer { grid-template-columns:1fr; padding:48px 28px; }
+  #s-collection { padding:80px 24px; }
+  #scene-indicator { display:none; }
+}
 </style>
 </head>
 <body>
 
 <!-- CURSOR -->
-<div id="cursor">
-  <div id="cursor-dot"></div>
-  <div id="cursor-ring"></div>
+<div id="cur"><div id="cur-dot"></div><div id="cur-ring"></div></div>
+
+<!-- PROGRESS BAR -->
+<div id="progress-bar"></div>
+
+<!-- SCENE INDICATOR -->
+<div id="scene-indicator">
+  <div class="si-dot active" data-sec="0"></div>
+  <div class="si-dot" data-sec="1"></div>
+  <div class="si-dot" data-sec="2"></div>
+  <div class="si-dot" data-sec="3"></div>
+  <div class="si-dot" data-sec="4"></div>
 </div>
+
+<!-- THREE.JS CANVAS -->
+<canvas id="three-canvas"></canvas>
 
 <!-- AGE GATE -->
 <div id="age-gate">
-  <div class="age-brand">NOIR</div>
-  <div class="age-question">Are you of legal smoking age?</div>
-  <div class="age-buttons">
-    <button class="age-btn primary" onclick="enterSite()">Yes, I am</button>
-    <button class="age-btn" onclick="alert('This site is for adults only.')">No, exit</button>
+  <div class="ag-brand">NOIR</div>
+  <div class="ag-line"></div>
+  <div class="ag-q">Are you of legal smoking age?</div>
+  <div class="ag-btns">
+    <button class="ag-btn yes" onclick="enterSite()">Yes, I am</button>
+    <button class="ag-btn" onclick="alert('This site is for adults only.')">No, exit</button>
   </div>
-  <p class="age-warning">This website contains content intended for adults of legal smoking age. Smoking is harmful to your health. By entering, you confirm you are of legal age in your jurisdiction.</p>
+  <p class="ag-warn">This website contains content intended for adults of legal smoking age. Smoking is harmful to your health. By entering, you confirm you are of legal age in your jurisdiction.</p>
 </div>
 
 <!-- LOADER -->
 <div id="loader">
-  <div id="loader-brand">NOIR</div>
-  <div id="loader-line"></div>
-  <div id="loader-text">Crafting the experience...</div>
+  <div class="ld-brand">NOIR</div>
+  <div class="ld-bar-wrap"><div class="ld-bar" id="ld-bar"></div></div>
+  <div class="ld-txt">Composing the experience…</div>
 </div>
 
 <!-- NAV -->
 <nav id="nav">
-  <a class="nav-brand" href="#">NOIR</a>
+  <a class="nav-logo" href="#">NOIR</a>
   <ul class="nav-links">
-    <li><a href="#origin">Origin</a></li>
-    <li><a href="#collection">Collection</a></li>
-    <li><a href="#ritual">Ritual</a></li>
-    <li><a href="#manifesto">Manifesto</a></li>
+    <li><a href="#s-origin">Origin</a></li>
+    <li><a href="#s-collection">Collection</a></li>
+    <li><a href="#s-ritual">Ritual</a></li>
+    <li><a href="#s-manifesto">Manifesto</a></li>
   </ul>
-  <a class="nav-cta" href="#">The Reserve</a>
+  <a class="nav-reserve" href="#">The Reserve</a>
 </nav>
 
-<!-- HERO -->
-<section id="hero">
-  <canvas id="hero-canvas"></canvas>
-  <div class="hero-content">
-    <div class="hero-eyebrow">Est. 1891 · Havana · Paris · Tokyo</div>
-    <h1 class="hero-title">The Art of<br><em>Composition</em></h1>
-    <p class="hero-subtitle">Where silence becomes ceremony</p>
-  </div>
-  <div class="hero-scroll">
-    <span>Scroll</span>
-    <div class="scroll-line"></div>
-  </div>
-</section>
+<!-- SCROLL ROOT -->
+<div id="scroll-root">
 
-<!-- MARQUEE -->
-<div class="marquee-wrap">
-  <div class="marquee-track" id="marquee">
-    <span class="marquee-item">Aged Cuban Leaf</span><span class="marquee-dot">·</span>
-    <span class="marquee-item">Hand Rolled</span><span class="marquee-dot">·</span>
-    <span class="marquee-item">130 Years of Mastery</span><span class="marquee-dot">·</span>
-    <span class="marquee-item">Limited Reserve</span><span class="marquee-dot">·</span>
-    <span class="marquee-item">Tobacco & Philosophy</span><span class="marquee-dot">·</span>
-    <span class="marquee-item">The Ritual of Stillness</span><span class="marquee-dot">·</span>
-    <span class="marquee-item">Aged Cuban Leaf</span><span class="marquee-dot">·</span>
-    <span class="marquee-item">Hand Rolled</span><span class="marquee-dot">·</span>
-    <span class="marquee-item">130 Years of Mastery</span><span class="marquee-dot">·</span>
-    <span class="marquee-item">Limited Reserve</span><span class="marquee-dot">·</span>
-    <span class="marquee-item">Tobacco & Philosophy</span><span class="marquee-dot">·</span>
-    <span class="marquee-item">The Ritual of Stillness</span><span class="marquee-dot">·</span>
-  </div>
-</div>
+  <!-- HERO -->
+  <section class="scene" id="s-hero" data-scene="0">
+    <div class="hero-inner">
+      <div class="hero-eyebrow">Est. 1891 &nbsp;·&nbsp; Havana &nbsp;·&nbsp; Paris &nbsp;·&nbsp; Tokyo</div>
+      <h1 class="hero-h1">The Art of<br><em>Composition</em></h1>
+      <p class="hero-sub">Where silence becomes ceremony</p>
+    </div>
+    <div class="hero-scroll-cue">
+      <span>Scroll</span>
+      <div class="scroll-stem"></div>
+    </div>
+  </section>
 
-<!-- ORIGIN -->
-<section id="origin">
-  <div class="origin-visual reveal">
-    <div class="origin-canvas-wrap">
-      <canvas id="cigarette-canvas"></canvas>
-    </div>
-    <div class="origin-frame"></div>
-  </div>
-  <div class="origin-text">
-    <div class="chapter-label reveal">Chapter One</div>
-    <h2 class="origin-heading reveal reveal-delay-1">Born from the<br><em>Earth's Memory</em></h2>
-    <p class="origin-body reveal reveal-delay-2">
-      In the volcanic highlands of the Vuelta Abajo, where time moves like warm smoke through cathedral light, the finest tobacco leaves have been cultivated since 1891. Each harvest is a conversation between sun, soil, and the hands of masters who have inherited centuries of knowing.
-    </p>
-    <p class="origin-body reveal reveal-delay-2" style="margin-top: 20px;">
-      NOIR does not simply produce cigarettes. We compose experiences — each one a brief, perfect moment of contemplation in a world that has forgotten how to pause.
-    </p>
-    <div class="origin-stat reveal reveal-delay-3">
-      <div class="stat-item">
-        <div class="stat-num">130</div>
-        <div class="stat-label">Years of mastery</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">17</div>
-        <div class="stat-label">Tobacco varietals</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">4</div>
-        <div class="stat-label">Harvest seasons</div>
-      </div>
+  <!-- MARQUEE -->
+  <div class="marquee-band" style="position:relative;z-index:5;">
+    <div class="marquee-track" id="mq">
+      <span class="m-item">Aged Cuban Leaf</span><span class="m-dot">·</span>
+      <span class="m-item">Hand Rolled</span><span class="m-dot">·</span>
+      <span class="m-item">130 Years of Mastery</span><span class="m-dot">·</span>
+      <span class="m-item">Limited Reserve</span><span class="m-dot">·</span>
+      <span class="m-item">Tobacco &amp; Philosophy</span><span class="m-dot">·</span>
+      <span class="m-item">The Ritual of Stillness</span><span class="m-dot">·</span>
+      <span class="m-item">Aged Cuban Leaf</span><span class="m-dot">·</span>
+      <span class="m-item">Hand Rolled</span><span class="m-dot">·</span>
+      <span class="m-item">130 Years of Mastery</span><span class="m-dot">·</span>
+      <span class="m-item">Limited Reserve</span><span class="m-dot">·</span>
+      <span class="m-item">Tobacco &amp; Philosophy</span><span class="m-dot">·</span>
+      <span class="m-item">The Ritual of Stillness</span><span class="m-dot">·</span>
     </div>
   </div>
-</section>
 
-<!-- SMOKE FULL -->
-<section id="smoke-section">
-  <canvas id="smoke-canvas-full"></canvas>
-  <div class="smoke-text">
-    <p class="smoke-quote reveal">
-      "In the curl of smoke, we find<br>the truest portrait of <em>impermanence</em>"
-    </p>
-    <div class="gold-line"></div>
-    <div class="smoke-attr reveal reveal-delay-1">— The NOIR Manifesto, 1923</div>
-  </div>
-</section>
+  <!-- ORIGIN -->
+  <section class="scene" id="s-origin" data-scene="1">
+    <!-- Left: 3D occupies this side visually -->
+    <div class="origin-pad-l" style="grid-column:1">
+      <div class="origin-visual-zone">
+        <div class="zone-frame"></div>
+      </div>
+    </div>
+    <!-- Right: text -->
+    <div class="origin-pad-r" style="grid-column:2">
+      <div class="sec-eyebrow rv">Chapter One</div>
+      <h2 class="sec-h2 rv d1">Born from the<br><em>Earth's Memory</em></h2>
+      <p class="sec-body rv d2">In the volcanic highlands of the Vuelta Abajo, where time moves like warm smoke through cathedral light, the finest tobacco leaves have been cultivated since 1891. Each harvest is a conversation between sun, soil, and the hands of masters who have inherited centuries of knowing.</p>
+      <p class="sec-body rv d2">NOIR does not simply produce cigarettes. We compose experiences — each one a brief, perfect moment of contemplation in a world that has forgotten how to pause.</p>
+      <div class="stat-row rv d3">
+        <div><div class="stat-num">130</div><div class="stat-lbl">Years of mastery</div></div>
+        <div><div class="stat-num">17</div><div class="stat-lbl">Tobacco varietals</div></div>
+        <div><div class="stat-num">4</div><div class="stat-lbl">Harvest seasons</div></div>
+      </div>
+    </div>
+  </section>
 
-<!-- COLLECTION -->
-<section id="collection">
-  <div class="collection-header">
-    <div class="chapter-label reveal" style="justify-content:center; gap:16px;">
-      <span style="width:40px;height:1px;background:var(--gold);display:block"></span>
-      Chapter Two
-      <span style="width:40px;height:1px;background:var(--gold);display:block"></span>
+  <!-- SMOKE INTERLUDE -->
+  <section class="scene" id="s-smoke" data-scene="2">
+    <div class="smoke-inner">
+      <p class="smoke-quote rv">"In the curl of smoke, we find<br>the truest portrait of <strong>impermanence</strong>"</p>
+      <div class="smoke-rule rv d1"></div>
+      <div class="smoke-attr rv d2">— The NOIR Manifesto, 1923</div>
     </div>
-    <h2 class="collection-title reveal">The Collection</h2>
-    <p class="reveal reveal-delay-1" style="font-size:13px;font-weight:200;color:rgba(245,237,214,0.4);letter-spacing:0.2em;text-transform:uppercase">Three expressions. One philosophy.</p>
-  </div>
-  <div class="collection-grid">
-    <div class="product-card reveal" data-product="0">
-      <canvas class="product-canvas" width="400" height="600"></canvas>
-      <div class="product-overlay">
-        <div class="product-note">The Classic</div>
-        <div class="product-name">Noir Absolu</div>
-        <div class="product-desc">The original expression. Full-bodied, composed of 13 aged varietals with notes of dark earth, cedar, and a whisper of vanilla from the Havana wrapper.</div>
-      </div>
-    </div>
-    <div class="product-card reveal reveal-delay-1" data-product="1">
-      <canvas class="product-canvas" width="400" height="600"></canvas>
-      <div class="product-overlay">
-        <div class="product-note">Limited Reserve</div>
-        <div class="product-name">Or Blanc</div>
-        <div class="product-desc">Encased in a Connecticut Shade wrapper of extraordinary delicacy. Light, refined, contemplative — for those who prefer their philosophy served quietly.</div>
-      </div>
-    </div>
-    <div class="product-card reveal reveal-delay-2" data-product="2">
-      <canvas class="product-canvas" width="400" height="600"></canvas>
-      <div class="product-overlay">
-        <div class="product-note">Grand Cru · 2019</div>
-        <div class="product-name">Singulier</div>
-        <div class="product-desc">Our rarest composition. Aged seven years in Cognac barrels. Only 1,200 boxes produced annually. An object lesson in patience and restraint.</div>
-      </div>
-    </div>
-  </div>
-</section>
+  </section>
 
-<!-- RITUAL -->
-<section id="ritual">
-  <div class="ritual-text">
-    <div class="chapter-label reveal">Chapter Three</div>
-    <h2 class="ritual-heading reveal reveal-delay-1">The Ritual of<br><em>Stillness</em></h2>
-    <div class="ritual-steps">
-      <div class="ritual-step reveal reveal-delay-2">
-        <div class="step-num">01</div>
-        <div class="step-content">
-          <div class="step-title">The Selection</div>
-          <div class="step-desc">Choose your moment. NOIR is not a hurried pleasure — it is a decision to step outside the ordinary flow of time.</div>
+  <!-- COLLECTION -->
+  <section class="scene" id="s-collection" data-scene="2" style="display:block">
+    <div class="col-header">
+      <div class="sec-eyebrow rv" style="justify-content:center;">
+        <span style="width:36px;height:1px;background:var(--gold);display:block;"></span>
+        Chapter Two
+        <span style="width:36px;height:1px;background:var(--gold);display:block;"></span>
+      </div>
+      <h2 class="col-h2 rv d1">The Collection</h2>
+      <p class="col-sub rv d2">Three expressions · One philosophy</p>
+    </div>
+    <div class="col-grid">
+      <div class="prod-card rv">
+        <div class="prod-bg prod-bg-1"></div>
+        <div class="prod-glow prod-glow-1"></div>
+        <div class="prod-canvas-wrap"><canvas class="prod-cig-canvas" id="pc0"></canvas></div>
+        <div class="prod-overlay">
+          <div class="prod-badge">The Classic</div>
+          <div class="prod-name">Noir Absolu</div>
+          <div class="prod-desc">Full-bodied, composed of 13 aged varietals with notes of dark earth, cedar, and a whisper of vanilla from the Havana wrapper.</div>
         </div>
+        <div class="prod-border"></div>
       </div>
-      <div class="ritual-step reveal reveal-delay-2">
-        <div class="step-num">02</div>
-        <div class="step-content">
-          <div class="step-title">The Preparation</div>
-          <div class="step-desc">Hold the cigarette between index and middle finger. Notice its weight, its warmth, the perfect tension of the wrapper.</div>
+      <div class="prod-card rv d1">
+        <div class="prod-bg prod-bg-2"></div>
+        <div class="prod-glow prod-glow-2"></div>
+        <div class="prod-canvas-wrap"><canvas class="prod-cig-canvas" id="pc1"></canvas></div>
+        <div class="prod-overlay">
+          <div class="prod-badge">Limited Reserve</div>
+          <div class="prod-name">Or Blanc</div>
+          <div class="prod-desc">Encased in a Connecticut Shade wrapper of extraordinary delicacy. Light, refined, contemplative — for those who prefer their philosophy served quietly.</div>
         </div>
+        <div class="prod-border"></div>
       </div>
-      <div class="ritual-step reveal reveal-delay-3">
-        <div class="step-num">03</div>
-        <div class="step-content">
-          <div class="step-title">The Contemplation</div>
-          <div class="step-desc">In the ascending smoke, find your thoughts. This is not consumption — it is communion with silence.</div>
+      <div class="prod-card rv d2">
+        <div class="prod-bg prod-bg-3"></div>
+        <div class="prod-glow prod-glow-3"></div>
+        <div class="prod-canvas-wrap"><canvas class="prod-cig-canvas" id="pc2"></canvas></div>
+        <div class="prod-overlay">
+          <div class="prod-badge">Grand Cru · 2019</div>
+          <div class="prod-name">Singulier</div>
+          <div class="prod-desc">Aged seven years in Cognac barrels. Only 1,200 boxes produced annually. An object lesson in patience and restraint.</div>
+        </div>
+        <div class="prod-border"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RITUAL -->
+  <section class="scene" id="s-ritual" data-scene="3">
+    <div class="ritual-left">
+      <div class="sec-eyebrow rv">Chapter Three</div>
+      <h2 class="sec-h2 rv d1">The Ritual of<br><em>Stillness</em></h2>
+      <div class="ritual-steps">
+        <div class="r-step rv d1">
+          <div class="r-num">01</div>
+          <div><div class="r-title">The Selection</div><div class="r-desc">Choose your moment. NOIR is not a hurried pleasure — it is a decision to step outside the ordinary flow of time.</div></div>
+        </div>
+        <div class="r-step rv d2">
+          <div class="r-num">02</div>
+          <div><div class="r-title">The Preparation</div><div class="r-desc">Hold the cigarette between index and middle finger. Notice its weight, its warmth, the perfect tension of the wrapper.</div></div>
+        </div>
+        <div class="r-step rv d3">
+          <div class="r-num">03</div>
+          <div><div class="r-title">The Contemplation</div><div class="r-desc">In the ascending smoke, find your thoughts. This is not consumption — it is communion with silence.</div></div>
         </div>
       </div>
     </div>
-  </div>
-  <div class="ritual-visual reveal reveal-delay-2">
-    <canvas id="ritual-canvas"></canvas>
-  </div>
-</section>
-
-<!-- MANIFESTO -->
-<section id="manifesto">
-  <div class="manifesto-bg"></div>
-  <div class="manifesto-lines"></div>
-  <div class="manifesto-content">
-    <div class="chapter-label reveal" style="justify-content:center">
-      <span style="width:40px;height:1px;background:var(--gold);display:block"></span>
-      The Manifesto
+    <div class="ritual-right">
+      <div class="ritual-visual-zone rv d2" style="flex:1;min-height:400px;"></div>
     </div>
-    <h2 class="manifesto-heading reveal">
-      <span class="line"><span>We believe in</span></span>
-      <span class="line"><span style="color:var(--gold);font-style:italic">the beauty of pausing.</span></span>
-    </h2>
-    <p class="manifesto-body reveal reveal-delay-1">
-      In an age of endless acceleration, NOIR is an act of gentle resistance. We offer not escape, but arrival — to the present moment, to your own breath, to the quiet intelligence that surfaces only in stillness. Every cigarette we craft is an invitation. What you do with that moment is your art.
-    </p>
-    <a href="#" class="manifesto-cta reveal reveal-delay-2">Discover the Reserve</a>
-  </div>
-</section>
+  </section>
 
-<!-- FOOTER -->
-<footer>
-  <div>
-    <div class="footer-brand">NOIR</div>
-    <div class="footer-tagline">The Art of Composition</div>
-  </div>
-  <div>
-    <div class="footer-col-title">Navigate</div>
-    <ul class="footer-links">
-      <li><a href="#">Our Story</a></li>
-      <li><a href="#">The Collection</a></li>
-      <li><a href="#">The Ritual</a></li>
-      <li><a href="#">The Reserve</a></li>
-    </ul>
-  </div>
-  <div>
-    <div class="footer-col-title">Contact</div>
-    <ul class="footer-links">
-      <li><a href="#">Private Client Services</a></li>
-      <li><a href="#">Boutique Locations</a></li>
-      <li><a href="#">Press Inquiries</a></li>
-      <li><a href="#">Careers</a></li>
-    </ul>
-  </div>
-  <div class="footer-bottom">
-    <div class="footer-legal">
-      © 2024 Maison NOIR. All rights reserved.<br>
-      Smoking kills. Tobacco products are strictly for adults of legal smoking age.
+  <!-- MANIFESTO -->
+  <section class="scene" id="s-manifesto" data-scene="4">
+    <div class="manifesto-grid"></div>
+    <div class="manifesto-inner">
+      <div class="sec-eyebrow rv" style="justify-content:center;">
+        <span style="width:36px;height:1px;background:var(--gold);display:block;"></span>
+        The Manifesto
+      </div>
+      <h2 class="m-h2 rv">
+        <span class="g"><span>We believe in</span></span>
+        <span class="g"><span><em>the beauty</em></span></span>
+        <span class="g"><span>of pausing.</span></span>
+      </h2>
+      <p class="m-body rv d1">In an age of endless acceleration, NOIR is an act of gentle resistance. We offer not escape, but arrival — to the present moment, to your own breath, to the quiet intelligence that surfaces only in stillness. Every cigarette we craft is an invitation. What you do with that moment is your art.</p>
+      <a href="#" class="m-cta rv d2">Discover the Reserve</a>
     </div>
-    <div class="footer-age">18+ Only · Adults Exclusively</div>
-  </div>
-</footer>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div>
+      <div class="ft-brand">NOIR</div>
+      <div class="ft-tag">The Art of Composition</div>
+    </div>
+    <div>
+      <div class="ft-col-t">Navigate</div>
+      <ul class="ft-links">
+        <li><a href="#">Our Story</a></li>
+        <li><a href="#">The Collection</a></li>
+        <li><a href="#">The Ritual</a></li>
+        <li><a href="#">The Reserve</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="ft-col-t">Contact</div>
+      <ul class="ft-links">
+        <li><a href="#">Private Client Services</a></li>
+        <li><a href="#">Boutique Locations</a></li>
+        <li><a href="#">Press Inquiries</a></li>
+        <li><a href="#">Careers</a></li>
+      </ul>
+    </div>
+    <div class="ft-bottom">
+      <div class="ft-legal">© 2024 Maison NOIR. All rights reserved.<br>Smoking kills. Tobacco products are strictly for adults of legal smoking age.</div>
+      <div class="ft-age">18+ Only · Adults Exclusively</div>
+    </div>
+  </footer>
+
+</div><!-- end scroll-root -->
+
+<!-- THREE.JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
-// ============================================================
+// =========================================================
+// GLOBAL STATE
+// =========================================================
+let scrollY = 0, targetScrollY = 0, easedScroll = 0;
+let mouseMX = 0, mouseMY = 0;
+
+// =========================================================
+// CURSOR
+// =========================================================
+const cDot = document.getElementById('cur-dot');
+const cRing = document.getElementById('cur-ring');
+let cx = 0, cy = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => {
+  cx = e.clientX; cy = e.clientY;
+  cDot.style.left = cx+'px'; cDot.style.top = cy+'px';
+  mouseMX = (e.clientX / window.innerWidth - .5) * 2;
+  mouseMY = (e.clientY / window.innerHeight - .5) * 2;
+});
+(function animCur() {
+  rx += (cx - rx) * .1; ry += (cy - ry) * .1;
+  cRing.style.left = rx+'px'; cRing.style.top = ry+'px';
+  requestAnimationFrame(animCur);
+})();
+document.querySelectorAll('a,button,.prod-card,.r-step,.ag-btn').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('hov'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('hov'));
+});
+
+// =========================================================
 // AGE GATE
-// ============================================================
+// =========================================================
 function enterSite() {
-  document.getElementById('age-gate').classList.add('hidden');
+  document.getElementById('age-gate').classList.add('gone');
   startLoader();
 }
 
-// ============================================================
+// =========================================================
 // LOADER
-// ============================================================
+// =========================================================
 function startLoader() {
-  const line = document.getElementById('loader-line');
-  setTimeout(() => { line.style.width = '200px'; }, 100);
+  const bar = document.getElementById('ld-bar');
+  setTimeout(() => bar.style.width = '100%', 80);
   setTimeout(() => {
-    document.getElementById('loader').classList.add('hidden');
-    initSite();
-  }, 2500);
+    document.getElementById('loader').classList.add('out');
+    initAll();
+  }, 2600);
 }
 
-// ============================================================
-// CURSOR
-// ============================================================
-const cursorDot = document.getElementById('cursor-dot');
-const cursorRing = document.getElementById('cursor-ring');
-let mouseX = 0, mouseY = 0;
-let ringX = 0, ringY = 0;
-
-document.addEventListener('mousemove', e => {
-  mouseX = e.clientX; mouseY = e.clientY;
-  cursorDot.style.left = mouseX + 'px';
-  cursorDot.style.top = mouseY + 'px';
-});
-
-function animateCursor() {
-  ringX += (mouseX - ringX) * 0.12;
-  ringY += (mouseY - ringY) * 0.12;
-  cursorRing.style.left = ringX + 'px';
-  cursorRing.style.top = ringY + 'px';
-  requestAnimationFrame(animateCursor);
-}
-animateCursor();
-
-document.querySelectorAll('a, button, .product-card, .ritual-step').forEach(el => {
-  el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
-  el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
-});
-
-// ============================================================
-// NAV SCROLL
-// ============================================================
+// =========================================================
+// SCROLL + NAV + PROGRESS
+// =========================================================
 window.addEventListener('scroll', () => {
-  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 80);
+  targetScrollY = window.scrollY;
+  const maxS = document.body.scrollHeight - window.innerHeight;
+  document.getElementById('progress-bar').style.width = (targetScrollY / maxS * 100) + '%';
+  document.getElementById('nav').classList.toggle('scrolled', targetScrollY > 60);
+  updateSectionIndicator();
 });
 
-// ============================================================
-// SCROLL REVEAL
-// ============================================================
-const revealObserver = new IntersectionObserver(entries => {
+function updateSectionIndicator() {
+  const sections = ['s-hero','s-origin','s-smoke','s-ritual','s-manifesto'];
+  const mid = window.scrollY + window.innerHeight * 0.5;
+  let active = 0;
+  sections.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.offsetTop <= mid) active = i;
+  });
+  document.querySelectorAll('.si-dot').forEach((d, i) => d.classList.toggle('active', i === active));
+}
+
+// =========================================================
+// REVEAL
+// =========================================================
+const rvObs = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) {
-      e.target.classList.add('visible');
-      if (e.target.classList.contains('manifesto-heading')) {
-        e.target.classList.add('visible');
-      }
+      e.target.classList.add('vis');
+      if (e.target.classList.contains('m-h2')) e.target.classList.add('vis');
     }
   });
-}, { threshold: 0.15 });
+}, { threshold: 0.12 });
+document.querySelectorAll('.rv, .m-h2').forEach(el => rvObs.observe(el));
 
-document.querySelectorAll('.reveal, .manifesto-heading').forEach(el => revealObserver.observe(el));
+// =========================================================
+// THREE.JS — PERSISTENT 3D SCENE
+// =========================================================
+let THREE_SCENE, THREE_CAMERA, THREE_RENDERER;
+let cigGroup, filterMesh, bodyMesh, bandMesh, tipMesh;
+let ambientLight, pointLight1, pointLight2, rimLight;
+let smokeParticles = [], smokeGeoms = [], smokeMeshes = [];
+let bgStars;
 
-// ============================================================
-// HERO CANVAS — Particle Smoke + Floating Elements
-// ============================================================
-function initHeroCanvas() {
-  const canvas = document.getElementById('hero-canvas');
-  const ctx = canvas.getContext('2d');
+// Camera keyframes per scroll section
+const TOTAL_HEIGHT = () => document.body.scrollHeight - window.innerHeight;
 
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  // Particles
-  const particles = [];
-  const NUM = 200;
-
-  class Particle {
-    constructor() { this.reset(); }
-    reset() {
-      this.x = Math.random() * canvas.width;
-      this.y = canvas.height + Math.random() * 200;
-      this.vx = (Math.random() - 0.5) * 0.4;
-      this.vy = -(Math.random() * 0.8 + 0.2);
-      this.life = 0;
-      this.maxLife = Math.random() * 300 + 200;
-      this.size = Math.random() * 80 + 20;
-      this.alpha = 0;
-      this.drift = (Math.random() - 0.5) * 0.003;
-    }
-    update() {
-      this.life++;
-      this.x += this.vx + Math.sin(this.life * this.drift) * 0.5;
-      this.y += this.vy;
-      this.vx += (Math.random() - 0.5) * 0.02;
-      const t = this.life / this.maxLife;
-      this.alpha = t < 0.2 ? t / 0.2 * 0.15 : t > 0.7 ? (1 - t) / 0.3 * 0.15 : 0.15;
-      if (this.life >= this.maxLife) this.reset();
-    }
-    draw() {
-      const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
-      grad.addColorStop(0, `rgba(200,169,110,${this.alpha})`);
-      grad.addColorStop(1, 'transparent');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  for (let i = 0; i < NUM; i++) {
-    const p = new Particle();
-    p.life = Math.random() * p.maxLife;
-    p.y = Math.random() * canvas.height;
-    particles.push(p);
-  }
-
-  // Stars
-  const stars = [];
-  for (let i = 0; i < 80; i++) {
-    stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: Math.random() * 1.5,
-      alpha: Math.random() * 0.4 + 0.1,
-      speed: Math.random() * 0.002 + 0.001
-    });
-  }
-
-  let t = 0;
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Dark radial bg
-    const bgGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width * 0.8);
-    bgGrad.addColorStop(0, 'rgba(20,15,5,0.95)');
-    bgGrad.addColorStop(1, 'rgba(5,5,5,0.98)');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Stars
-    stars.forEach(s => {
-      s.alpha = 0.1 + Math.sin(t * s.speed * 1000) * 0.2 + 0.2;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(200,169,110,${Math.max(0, s.alpha)})`;
-      ctx.fill();
-    });
-
-    // Smoke
-    particles.forEach(p => { p.update(); p.draw(); });
-
-    // Center glow
-    const glow = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, 400);
-    glow.addColorStop(0, 'rgba(200,169,110,0.03)');
-    glow.addColorStop(1, 'transparent');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Horizontal light beams
-    for (let i = 0; i < 3; i++) {
-      const y = canvas.height * (0.3 + i * 0.2);
-      const beam = ctx.createLinearGradient(0, y, canvas.width, y);
-      beam.addColorStop(0, 'transparent');
-      beam.addColorStop(0.3 + Math.sin(t * 0.001 + i) * 0.1, `rgba(200,169,110,0.015)`);
-      beam.addColorStop(1, 'transparent');
-      ctx.fillStyle = beam;
-      ctx.fillRect(0, y - 1, canvas.width, 2);
-    }
-
-    t++;
-    requestAnimationFrame(animate);
-  }
-  animate();
-}
-
-// ============================================================
-// CIGARETTE CANVAS — Realistic Cigarette with smoke
-// ============================================================
-function initCigaretteCanvas() {
-  const canvas = document.getElementById('cigarette-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-
-  function resize() {
-    canvas.width = canvas.parentElement.offsetWidth;
-    canvas.height = canvas.parentElement.offsetHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  const smokeParticles = [];
-
-  class SmokeParticle {
-    constructor(cx, cy) {
-      this.x = cx + (Math.random()-0.5) * 4;
-      this.y = cy;
-      this.vx = (Math.random()-0.5) * 0.6;
-      this.vy = -(Math.random() * 1.2 + 0.5);
-      this.life = 0;
-      this.maxLife = Math.random() * 120 + 80;
-      this.size = Math.random() * 20 + 8;
-      this.rot = Math.random() * Math.PI * 2;
-      this.rotV = (Math.random()-0.5) * 0.03;
-    }
-    update() {
-      this.life++;
-      this.x += this.vx;
-      this.y += this.vy;
-      this.vx += (Math.random()-0.5) * 0.08;
-      this.vy *= 0.99;
-      this.size += 0.3;
-      this.rot += this.rotV;
-    }
-    draw() {
-      const t = this.life / this.maxLife;
-      const alpha = t < 0.3 ? t/0.3 * 0.3 : (1-t) * 0.3;
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rot);
-      const g = ctx.createRadialGradient(0,0,0,0,0,this.size);
-      g.addColorStop(0, 'rgba(180,170,150,0.8)');
-      g.addColorStop(1, 'transparent');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(0, 0, this.size, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
-    }
-    isDead() { return this.life >= this.maxLife; }
-  }
-
-  let t = 0;
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Dark bg with vignette
-    ctx.fillStyle = '#080808';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const vig = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width * 0.8);
-    vig.addColorStop(0, 'transparent');
-    vig.addColorStop(1, 'rgba(0,0,0,0.8)');
-    ctx.fillStyle = vig;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    const cigW = 14;
-    const cigH = canvas.height * 0.65;
-    const cigX = cx - cigW / 2;
-    const cigY = cy - cigH / 2 + 40;
-
-    // Light glow behind
-    const aura = ctx.createRadialGradient(cx, cigY, 0, cx, cigY + cigH/2, cigH * 0.6);
-    aura.addColorStop(0, 'rgba(200,169,110,0.08)');
-    aura.addColorStop(1, 'transparent');
-    ctx.fillStyle = aura;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Cigarette body
-    const bodyGrad = ctx.createLinearGradient(cigX, 0, cigX + cigW, 0);
-    bodyGrad.addColorStop(0, '#C8A96E');
-    bodyGrad.addColorStop(0.15, '#F5EDD6');
-    bodyGrad.addColorStop(0.5, '#E8D5A3');
-    bodyGrad.addColorStop(0.85, '#C8A96E');
-    bodyGrad.addColorStop(1, '#8B6914');
-    ctx.fillStyle = bodyGrad;
-    roundRect(ctx, cigX, cigY, cigW, cigH * 0.85, 3);
-    ctx.fill();
-
-    // Filter (bottom)
-    const filterGrad = ctx.createLinearGradient(cigX, 0, cigX + cigW, 0);
-    filterGrad.addColorStop(0, '#C8A96E');
-    filterGrad.addColorStop(0.15, '#E8C870');
-    filterGrad.addColorStop(0.5, '#D4A852');
-    filterGrad.addColorStop(0.85, '#C8A96E');
-    filterGrad.addColorStop(1, '#8B6914');
-    ctx.fillStyle = filterGrad;
-    const filterH = cigH * 0.2;
-    const filterY = cigY + cigH * 0.85;
-    roundRect(ctx, cigX, filterY, cigW, filterH, 3);
-    ctx.fill();
-
-    // Filter band
-    ctx.fillStyle = 'rgba(139,105,20,0.5)';
-    ctx.fillRect(cigX, filterY, cigW, 2);
-
-    // Filter texture lines
-    ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 8; i++) {
-      ctx.beginPath();
-      ctx.moveTo(cigX, filterY + i * (filterH/8));
-      ctx.lineTo(cigX + cigW, filterY + i * (filterH/8));
-      ctx.stroke();
-    }
-
-    // Brand text on cigarette
-    ctx.save();
-    ctx.translate(cx, cigY + cigH * 0.4);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillStyle = 'rgba(139,105,20,0.6)';
-    ctx.font = '600 7px Montserrat';
-    ctx.letterSpacing = '0.3em';
-    ctx.textAlign = 'center';
-    ctx.fillText('N O I R', 0, 2);
-    ctx.restore();
-
-    // Lit end glow
-    const litY = cigY - 2;
-    const emb = ctx.createRadialGradient(cx, litY, 0, cx, litY, 20 + Math.sin(t * 0.08) * 4);
-    emb.addColorStop(0, 'rgba(255,150,30,0.9)');
-    emb.addColorStop(0.3, 'rgba(255,80,10,0.5)');
-    emb.addColorStop(0.7, 'rgba(255,50,0,0.15)');
-    emb.addColorStop(1, 'transparent');
-    ctx.fillStyle = emb;
-    ctx.beginPath();
-    ctx.arc(cx, litY, 20 + Math.sin(t * 0.08) * 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Ash tip
-    ctx.fillStyle = '#333';
-    roundRect(ctx, cigX + 1, cigY - 6, cigW - 2, 8, 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(255,100,20,0.8)';
-    ctx.beginPath();
-    ctx.arc(cx, cigY - 2, 3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Smoke
-    if (t % 3 === 0) smokeParticles.push(new SmokeParticle(cx, cigY - 10));
-    for (let i = smokeParticles.length - 1; i >= 0; i--) {
-      smokeParticles[i].update();
-      smokeParticles[i].draw();
-      if (smokeParticles[i].isDead()) smokeParticles.splice(i, 1);
-    }
-
-    // Highlight on cylinder
-    const hl = ctx.createLinearGradient(cigX, 0, cigX + cigW * 0.3, 0);
-    hl.addColorStop(0, 'rgba(255,255,255,0.2)');
-    hl.addColorStop(1, 'transparent');
-    ctx.fillStyle = hl;
-    ctx.fillRect(cigX, cigY, cigW * 0.3, cigH * 0.85);
-
-    // Reflection on surface below
-    const refGrad = ctx.createLinearGradient(cx, cigY + cigH, cx, cigY + cigH + 80);
-    refGrad.addColorStop(0, 'rgba(200,169,110,0.15)');
-    refGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = refGrad;
-    ctx.save();
-    ctx.scale(1, -0.3);
-    ctx.translate(0, -(cigY + cigH) * (1/0.3 + 1));
-    roundRect(ctx, cigX, cigY, cigW, cigH * 0.85, 3);
-    ctx.fill();
-    ctx.restore();
-
-    t++;
-    requestAnimationFrame(draw);
-  }
-
-  function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
-  }
-
-  draw();
-}
-
-// ============================================================
-// FULL SMOKE CANVAS
-// ============================================================
-function initFullSmokeCanvas() {
-  const canvas = document.getElementById('smoke-canvas-full');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-
-  function resize() {
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  const particles = [];
-  class SmokeP {
-    constructor() {
-      this.x = canvas.width * (0.2 + Math.random() * 0.6);
-      this.y = canvas.height + Math.random() * 100;
-      this.vx = (Math.random()-0.5) * 0.8;
-      this.vy = -(Math.random() * 1.5 + 0.5);
-      this.life = 0;
-      this.maxLife = Math.random() * 250 + 150;
-      this.size = Math.random() * 100 + 40;
-    }
-    update() {
-      this.life++;
-      this.x += this.vx + Math.sin(this.life * 0.02) * 0.5;
-      this.y += this.vy;
-      this.size += 0.5;
-    }
-    draw() {
-      const t = this.life / this.maxLife;
-      const a = t < 0.3 ? t/0.3 * 0.12 : (1-t) * 0.12;
-      const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
-      g.addColorStop(0, `rgba(200,180,150,${a})`);
-      g.addColorStop(1, 'transparent');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-      ctx.fill();
-    }
-    isDead() { return this.life >= this.maxLife; }
-  }
-
-  let t = 0;
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#030303';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    if (t % 4 === 0 && particles.length < 80) particles.push(new SmokeP());
-    for (let i = particles.length-1; i >= 0; i--) {
-      particles[i].update();
-      particles[i].draw();
-      if (particles[i].isDead()) particles.splice(i, 1);
-    }
-
-    // Central glow
-    const cg = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width * 0.4);
-    cg.addColorStop(0, 'rgba(200,169,110,0.04)');
-    cg.addColorStop(1, 'transparent');
-    ctx.fillStyle = cg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    t++;
-    requestAnimationFrame(draw);
-  }
-  draw();
-}
-
-// ============================================================
-// PRODUCT CANVASES
-// ============================================================
-const productColors = [
-  { bg: '#0A0805', wrap: '#1A1208', band: '#C8A96E', label: 'ABSOLU' },
-  { bg: '#080A08', wrap: '#F5EDD6', band: '#C8A96E', label: 'OR BLANC' },
-  { bg: '#0A0505', wrap: '#2A1510', band: '#8B1a1a', label: 'SINGULIER' }
+// Scroll-driven keyframes for the cigarette
+// Each frame: { scrollFrac, pos:[x,y,z], rot:[x,y,z], scale }
+const CIG_KEYFRAMES = [
+  { f: 0.00, pos: [0, -0.2, 0],  rot: [0, 0, 0],      scale: 1.0,  camZ: 5 },
+  { f: 0.08, pos: [0, -0.2, 0],  rot: [0, 0.3, 0],     scale: 0.92, camZ: 5 },
+  { f: 0.18, pos: [-1.4, 0, 0],  rot: [0.1, 0.5, 0.05],scale: 0.85, camZ: 4.8 },
+  { f: 0.30, pos: [-1.4, 0, 0],  rot: [0.1, 0.8, 0.1], scale: 0.82, camZ: 4.8 },
+  { f: 0.42, pos: [0, 0.3, 0],   rot: [0.3, 1.2, 0],   scale: 1.1,  camZ: 4.5 },
+  { f: 0.54, pos: [0, 0.3, 0],   rot: [0.5, 1.8, 0.2], scale: 1.05, camZ: 4.5 },
+  { f: 0.62, pos: [1.5, -0.3, 0],rot: [0.2, 2.4, -0.1],scale: 0.88, camZ: 5.2 },
+  { f: 0.74, pos: [1.5, -0.3, 0],rot: [0.3, 3.0, 0],   scale: 0.85, camZ: 5.2 },
+  { f: 0.86, pos: [0, 0.1, 0],   rot: [0.15, 3.6, 0],  scale: 0.9,  camZ: 5 },
+  { f: 1.00, pos: [0.8, -0.5, 0],rot: [0.2, 4.2, 0.1], scale: 0.75, camZ: 5.5 },
 ];
 
-function initProductCanvases() {
-  document.querySelectorAll('.product-canvas').forEach((canvas, idx) => {
-    const ctx = canvas.getContext('2d');
-    const prod = productColors[idx];
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
+function easeInOut(t) { return t < .5 ? 2*t*t : -1+(4-2*t)*t; }
 
-    function resize() {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+function getKF(frac) {
+  const kf = CIG_KEYFRAMES;
+  if (frac <= kf[0].f) return { ...kf[0] };
+  if (frac >= kf[kf.length-1].f) return { ...kf[kf.length-1] };
+  for (let i = 0; i < kf.length - 1; i++) {
+    if (frac >= kf[i].f && frac <= kf[i+1].f) {
+      const t = easeInOut((frac - kf[i].f) / (kf[i+1].f - kf[i].f));
+      return {
+        pos: [
+          lerp(kf[i].pos[0], kf[i+1].pos[0], t),
+          lerp(kf[i].pos[1], kf[i+1].pos[1], t),
+          lerp(kf[i].pos[2], kf[i+1].pos[2], t),
+        ],
+        rot: [
+          lerp(kf[i].rot[0], kf[i+1].rot[0], t),
+          lerp(kf[i].rot[1], kf[i+1].rot[1], t),
+          lerp(kf[i].rot[2], kf[i+1].rot[2], t),
+        ],
+        scale: lerp(kf[i].scale, kf[i+1].scale, t),
+        camZ: lerp(kf[i].camZ, kf[i+1].camZ, t),
+      };
     }
-    canvas.width = 400; canvas.height = 600;
+  }
+  return { ...kf[0] };
+}
 
-    const particles = [];
-    let t = 0;
+// SMOKE SYSTEM
+const MAX_SMOKE = 120;
 
-    class SmP {
-      constructor() {
-        this.x = canvas.width / 2 + (Math.random()-0.5) * 30;
-        this.y = 60 + Math.random() * 10;
-        this.vx = (Math.random()-0.5) * 0.5;
-        this.vy = -(Math.random() * 1 + 0.3);
-        this.life = 0; this.maxLife = Math.random() * 100 + 60;
-        this.size = Math.random() * 25 + 8;
-      }
-      update() {
-        this.life++;
-        this.x += this.vx; this.y += this.vy;
-        this.vx += (Math.random()-0.5) * 0.05;
-        this.size += 0.3;
-      }
-      draw() {
-        const ta = this.life/this.maxLife;
-        const a = ta < 0.3 ? ta/0.3*0.15 : (1-ta)*0.15;
-        const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
-        g.addColorStop(0, `rgba(200,180,160,${a})`);
-        g.addColorStop(1, 'transparent');
-        ctx.fillStyle = g;
-        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
-      }
-      isDead() { return this.life >= this.maxLife; }
+class SmokeParticle {
+  constructor(x, y, z) {
+    this.life = 0;
+    this.maxLife = 80 + Math.random() * 100;
+    this.x = x + (Math.random() - 0.5) * 0.08;
+    this.y = y;
+    this.z = z + (Math.random() - 0.5) * 0.08;
+    this.vx = (Math.random() - 0.5) * 0.006;
+    this.vy = 0.012 + Math.random() * 0.01;
+    this.vz = (Math.random() - 0.5) * 0.004;
+    this.size = 0.06 + Math.random() * 0.08;
+    this.angle = Math.random() * Math.PI * 2;
+    this.angleV = (Math.random() - 0.5) * 0.015;
+    this.mesh = null;
+  }
+  update() {
+    this.life++;
+    this.x += this.vx + Math.sin(this.life * 0.04) * 0.003;
+    this.y += this.vy;
+    this.z += this.vz;
+    this.vx *= 0.998;
+    this.vy *= 0.997;
+    this.size += 0.0015;
+    this.angle += this.angleV;
+    const t = this.life / this.maxLife;
+    const alpha = t < 0.25 ? (t / 0.25) * 0.35 : (1 - t) * 0.35;
+    if (this.mesh) {
+      this.mesh.position.set(this.x, this.y, this.z);
+      this.mesh.scale.setScalar(this.size * 12);
+      this.mesh.rotation.z = this.angle;
+      this.mesh.material.opacity = alpha;
     }
+  }
+  isDead() { return this.life >= this.maxLife; }
+}
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+function initThreeJS() {
+  const canvas = document.getElementById('three-canvas');
+  THREE_SCENE = new THREE.Scene();
+  THREE_CAMERA = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 100);
+  THREE_CAMERA.position.set(0, 0, 5);
 
-      // BG gradient
-      const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      bg.addColorStop(0, prod.bg);
-      bg.addColorStop(1, '#050505');
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+  THREE_RENDERER = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  THREE_RENDERER.setSize(window.innerWidth, window.innerHeight);
+  THREE_RENDERER.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  THREE_RENDERER.shadowMap.enabled = true;
+  THREE_RENDERER.shadowMap.type = THREE.PCFSoftShadowMap;
+  THREE_RENDERER.toneMapping = THREE.ACESFilmicToneMapping;
+  THREE_RENDERER.toneMappingExposure = 1.4;
 
-      const cx = canvas.width / 2;
-      const cigW = 20;
-      const cigH = canvas.height * 0.6;
-      const cigX = cx - cigW/2;
-      const cigY = (canvas.height - cigH) / 2 + 30;
-
-      // Glow
-      const glow = ctx.createRadialGradient(cx, canvas.height/2, 0, cx, canvas.height/2, 160);
-      glow.addColorStop(0, `rgba(200,169,110,0.06)`);
-      glow.addColorStop(1, 'transparent');
-      ctx.fillStyle = glow; ctx.fillRect(0,0,canvas.width,canvas.height);
-
-      // Body
-      const bodyG = ctx.createLinearGradient(cigX, 0, cigX+cigW, 0);
-      bodyG.addColorStop(0, shadeColor(prod.wrap, -30));
-      bodyG.addColorStop(0.2, lightenColor(prod.wrap, 40));
-      bodyG.addColorStop(0.5, lightenColor(prod.wrap, 20));
-      bodyG.addColorStop(0.8, prod.wrap);
-      bodyG.addColorStop(1, shadeColor(prod.wrap, -50));
-      ctx.fillStyle = bodyG;
-      ctx.fillRect(cigX, cigY, cigW, cigH * 0.82);
-
-      // Band
-      ctx.fillStyle = prod.band;
-      ctx.fillRect(cigX, cigY + cigH * 0.42, cigW, 3);
-
-      // Filter
-      const filtG = ctx.createLinearGradient(cigX, 0, cigX+cigW, 0);
-      filtG.addColorStop(0, '#8B6914'); filtG.addColorStop(0.5, '#C8A96E'); filtG.addColorStop(1, '#8B6914');
-      ctx.fillStyle = filtG;
-      ctx.fillRect(cigX, cigY + cigH * 0.82, cigW, cigH * 0.18);
-
-      // Label
-      ctx.save();
-      ctx.translate(cx, cigY + cigH * 0.25);
-      ctx.rotate(-Math.PI/2);
-      ctx.fillStyle = idx === 1 ? 'rgba(139,105,20,0.8)' : 'rgba(200,169,110,0.6)';
-      ctx.font = '500 8px Montserrat';
-      ctx.textAlign = 'center';
-      ctx.fillText(prod.label, 0, 3);
-      ctx.restore();
-
-      // Embers
-      const emb = ctx.createRadialGradient(cx, cigY-3, 0, cx, cigY-3, 15 + Math.sin(t*0.1)*3);
-      emb.addColorStop(0, 'rgba(255,130,30,0.9)');
-      emb.addColorStop(0.5, 'rgba(255,60,10,0.4)');
-      emb.addColorStop(1, 'transparent');
-      ctx.fillStyle = emb;
-      ctx.beginPath(); ctx.arc(cx, cigY-3, 15 + Math.sin(t*0.1)*3, 0, Math.PI*2); ctx.fill();
-
-      // Smoke
-      if (t % 5 === 0) particles.push(new SmP());
-      for (let i = particles.length-1; i >= 0; i--) {
-        particles[i].update(); particles[i].draw();
-        if (particles[i].isDead()) particles.splice(i, 1);
-      }
-
-      // Reflection
-      ctx.save();
-      ctx.globalAlpha = 0.08;
-      ctx.scale(1, -1);
-      ctx.translate(0, -(cigY + cigH) * 2 - 20);
-      ctx.fillStyle = bodyG;
-      ctx.fillRect(cigX, cigY, cigW, cigH * 0.82);
-      ctx.restore();
-
-      // Vignette
-      const vig = ctx.createRadialGradient(cx, canvas.height/2, canvas.height*0.2, cx, canvas.height/2, canvas.height*0.8);
-      vig.addColorStop(0, 'transparent');
-      vig.addColorStop(1, 'rgba(0,0,0,0.7)');
-      ctx.fillStyle = vig; ctx.fillRect(0,0,canvas.width,canvas.height);
-
-      t++;
-      requestAnimationFrame(draw);
-    }
-    draw();
+  window.addEventListener('resize', () => {
+    THREE_CAMERA.aspect = window.innerWidth / window.innerHeight;
+    THREE_CAMERA.updateProjectionMatrix();
+    THREE_RENDERER.setSize(window.innerWidth, window.innerHeight);
   });
+
+  // LIGHTING
+  ambientLight = new THREE.AmbientLight(0x100a04, 0.8);
+  THREE_SCENE.add(ambientLight);
+
+  pointLight1 = new THREE.PointLight(0xffd490, 4, 12);
+  pointLight1.position.set(2, 2, 3);
+  pointLight1.castShadow = true;
+  THREE_SCENE.add(pointLight1);
+
+  pointLight2 = new THREE.PointLight(0xC8A96E, 2, 10);
+  pointLight2.position.set(-2, -1, 2);
+  THREE_SCENE.add(pointLight2);
+
+  rimLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+  rimLight.position.set(-3, 3, -2);
+  THREE_SCENE.add(rimLight);
+
+  // Ember glow light (moves with cig tip)
+  const emberLight = new THREE.PointLight(0xff6010, 3, 2);
+  emberLight.position.set(0, 1.3, 0);
+  THREE_SCENE.add(emberLight);
+
+  // BUILD CIGARETTE
+  buildCigarette();
+
+  // BACKGROUND PARTICLES
+  buildBgParticles();
+
+  // SMOKE POOL
+  buildSmokePool();
+
+  // RENDER LOOP
+  renderLoop();
 }
 
-function shadeColor(hex, pct) {
-  // rough shade
-  const num = parseInt(hex.replace('#',''), 16);
-  const r = Math.min(255, Math.max(0, (num >> 16) + pct));
-  const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + pct));
-  const b = Math.min(255, Math.max(0, (num & 0xff) + pct));
-  return `rgb(${r},${g},${b})`;
-}
-function lightenColor(hex, pct) { return shadeColor(hex, pct); }
+function buildCigarette() {
+  cigGroup = new THREE.Group();
 
-// ============================================================
-// RITUAL CANVAS — Elegant Spiral Smoke
-// ============================================================
-function initRitualCanvas() {
-  const canvas = document.getElementById('ritual-canvas');
+  const segments = 32;
+
+  // === BODY (white paper) ===
+  const bodyGeo = new THREE.CylinderGeometry(0.055, 0.055, 2.4, segments);
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: 0xF5EDD6,
+    roughness: 0.55,
+    metalness: 0.02,
+    envMapIntensity: 0.5,
+  });
+  bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+  bodyMesh.position.y = 0.5;
+  bodyMesh.castShadow = true;
+  cigGroup.add(bodyMesh);
+
+  // === TOBACCO BAND (gold ring) ===
+  const bandGeo = new THREE.CylinderGeometry(0.057, 0.057, 0.04, segments);
+  const bandMat = new THREE.MeshStandardMaterial({
+    color: 0xC8A96E,
+    roughness: 0.2,
+    metalness: 0.85,
+    envMapIntensity: 1.2,
+  });
+  bandMesh = new THREE.Mesh(bandGeo, bandMat);
+  bandMesh.position.y = 0.18;
+  cigGroup.add(bandMesh);
+
+  // === FILTER ===
+  const filterGeo = new THREE.CylinderGeometry(0.056, 0.056, 0.55, segments);
+  const filterMat = new THREE.MeshStandardMaterial({
+    color: 0xD4A050,
+    roughness: 0.7,
+    metalness: 0.05,
+  });
+  filterMesh = new THREE.Mesh(filterGeo, filterMat);
+  filterMesh.position.y = -1.0;
+  filterMesh.castShadow = true;
+  cigGroup.add(filterMesh);
+
+  // === FILTER BAND ===
+  const fbGeo = new THREE.CylinderGeometry(0.058, 0.058, 0.025, segments);
+  const fbMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.3, metalness: 0.6 });
+  const fbMesh = new THREE.Mesh(fbGeo, fbMat);
+  fbMesh.position.y = -0.72;
+  cigGroup.add(fbMesh);
+
+  // === ASH TIP ===
+  const ashGeo = new THREE.CylinderGeometry(0.052, 0.054, 0.08, segments);
+  const ashMat = new THREE.MeshStandardMaterial({ color: 0x333230, roughness: 0.95, metalness: 0 });
+  const ashMesh = new THREE.Mesh(ashGeo, ashMat);
+  ashMesh.position.y = 1.72;
+  cigGroup.add(ashMesh);
+
+  // === EMBER GLOW SPHERE ===
+  const emberGeo = new THREE.SphereGeometry(0.045, 16, 16);
+  const emberMat = new THREE.MeshStandardMaterial({
+    color: 0xff6010,
+    emissive: 0xff4400,
+    emissiveIntensity: 3,
+    roughness: 0.9,
+  });
+  tipMesh = new THREE.Mesh(emberGeo, emberMat);
+  tipMesh.position.y = 1.76;
+  cigGroup.add(tipMesh);
+
+  // === LOGO BAND (subtle gold text sim) ===
+  const logoBandGeo = new THREE.CylinderGeometry(0.0565, 0.0565, 0.25, segments);
+  const logoBandMat = new THREE.MeshStandardMaterial({
+    color: 0xC8A96E, roughness: 0.15, metalness: 0.9, transparent: true, opacity: 0.3,
+  });
+  const logoBand = new THREE.Mesh(logoBandGeo, logoBandMat);
+  logoBand.position.y = 0.55;
+  cigGroup.add(logoBand);
+
+  // === REFLECTIVE SHEEN (thin outer shell) ===
+  const sheenGeo = new THREE.CylinderGeometry(0.0555, 0.0555, 2.4, segments);
+  const sheenMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    roughness: 0.1,
+    metalness: 0.0,
+    transparent: true,
+    opacity: 0.04,
+    side: THREE.FrontSide,
+  });
+  const sheenMesh = new THREE.Mesh(sheenGeo, sheenMat);
+  sheenMesh.position.y = 0.5;
+  cigGroup.add(sheenMesh);
+
+  // Rotate to roughly upright, slight tilt
+  cigGroup.rotation.z = 0.08;
+  THREE_SCENE.add(cigGroup);
+}
+
+function buildSmokePool() {
+  const smokeGeo = new THREE.PlaneGeometry(1, 1);
+  const smokeMat = new THREE.MeshBasicMaterial({
+    color: 0xddd8cc,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  for (let i = 0; i < MAX_SMOKE; i++) {
+    const mat = smokeMat.clone();
+    const mesh = new THREE.Mesh(smokeGeo, mat);
+    mesh.visible = false;
+    THREE_SCENE.add(mesh);
+    smokeMeshes.push(mesh);
+  }
+}
+
+function getFreeSmokeSlot() {
+  return smokeMeshes.find(m => !m.visible || m.material.opacity < 0.001) || null;
+}
+
+function buildBgParticles() {
+  const count = 280;
+  const geo = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    positions[i*3]   = (Math.random() - 0.5) * 20;
+    positions[i*3+1] = (Math.random() - 0.5) * 20;
+    positions[i*3+2] = (Math.random() - 0.5) * 10 - 3;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const mat = new THREE.PointsMaterial({
+    color: 0xC8A96E,
+    size: 0.018,
+    transparent: true,
+    opacity: 0.35,
+    sizeAttenuation: true,
+  });
+  bgStars = new THREE.Points(geo, mat);
+  THREE_SCENE.add(bgStars);
+}
+
+// =========================================================
+// SMOOTH INERTIA SCROLL
+// =========================================================
+let currentEased = 0;
+let currentCamZ = 5;
+let cigPosX = 0, cigPosY = -0.2, cigPosZ = 0;
+let cigRotX = 0, cigRotY = 0, cigRotZ = 0.08;
+let cigScale = 1;
+let smokeFrame = 0;
+let t_global = 0;
+let ambientPhase = 0;
+
+function renderLoop() {
+  requestAnimationFrame(renderLoop);
+  t_global++;
+  ambientPhase += 0.008;
+
+  // Smooth scroll easing
+  currentEased += (targetScrollY - currentEased) * 0.065;
+  const frac = clamp(currentEased / TOTAL_HEIGHT(), 0, 1);
+
+  // Get keyframe interpolation
+  const kf = getKF(frac);
+
+  // Smooth cigarette transform
+  cigPosX += (kf.pos[0] - cigPosX) * 0.055;
+  cigPosY += (kf.pos[1] - cigPosY) * 0.055;
+  cigPosZ += (kf.pos[2] - cigPosZ) * 0.055;
+  cigRotX += (kf.rot[0] - cigRotX) * 0.055;
+  cigRotY += (kf.rot[1] - cigRotY) * 0.055;
+  cigRotZ += ((kf.rot[2] + 0.08) - cigRotZ) * 0.055;
+  cigScale += (kf.scale - cigScale) * 0.06;
+
+  // Smooth camera
+  currentCamZ += (kf.camZ - currentCamZ) * 0.05;
+
+  // Apply to group
+  if (cigGroup) {
+    // Ambient float
+    const floatY = Math.sin(ambientPhase * 0.7) * 0.04;
+    const floatX = Math.cos(ambientPhase * 0.5) * 0.02;
+
+    // Mouse parallax
+    const mx = mouseMX * 0.08;
+    const my = -mouseMY * 0.06;
+
+    cigGroup.position.set(cigPosX + floatX + mx, cigPosY + floatY + my, cigPosZ);
+    cigGroup.rotation.x = cigRotX + mouseMY * 0.04;
+    cigGroup.rotation.y = cigRotY + mouseMX * 0.06;
+    cigGroup.rotation.z = cigRotZ;
+    cigGroup.scale.setScalar(cigScale);
+
+    // Ember flicker
+    if (tipMesh) {
+      const flicker = 2.5 + Math.sin(t_global * 0.23) * 0.8 + Math.random() * 0.5;
+      tipMesh.material.emissiveIntensity = flicker;
+    }
+
+    // Point light follows cig tip
+    const tipWorldPos = new THREE.Vector3(0, 1.76, 0);
+    tipWorldPos.applyMatrix4(cigGroup.matrixWorld);
+    THREE_SCENE.children.forEach(c => {
+      if (c.isPointLight && c.color.r > 0.9 && c.color.g < 0.5) {
+        c.position.copy(tipWorldPos);
+        c.intensity = 2 + Math.sin(t_global * 0.3) * 0.8;
+      }
+    });
+  }
+
+  // Camera movement
+  THREE_CAMERA.position.z = currentCamZ;
+  THREE_CAMERA.position.x += (-mouseMX * 0.15 - THREE_CAMERA.position.x) * 0.04;
+  THREE_CAMERA.position.y += (mouseMY * 0.1 - THREE_CAMERA.position.y) * 0.04;
+  THREE_CAMERA.lookAt(0, 0, 0);
+
+  // Ambient lights pulse
+  if (ambientLight) ambientLight.intensity = 0.7 + Math.sin(ambientPhase * 1.3) * 0.1;
+  if (pointLight1) pointLight1.intensity = 3.5 + Math.sin(ambientPhase * 0.8) * 0.5;
+
+  // BG STARS rotate slowly
+  if (bgStars) {
+    bgStars.rotation.y += 0.00015;
+    bgStars.rotation.x += 0.00008;
+    bgStars.material.opacity = 0.28 + Math.sin(ambientPhase) * 0.07;
+  }
+
+  // SMOKE SYSTEM
+  smokeFrame++;
+  if (smokeFrame % 5 === 0 && cigGroup) {
+    const tipPos = new THREE.Vector3(0, 1.76, 0).applyMatrix4(cigGroup.matrixWorld);
+    const slot = getFreeSmokeSlot();
+    if (slot && smokeParticles.length < MAX_SMOKE) {
+      const sp = new SmokeParticle(tipPos.x, tipPos.y, tipPos.z);
+      sp.mesh = slot;
+      slot.visible = true;
+      smokeParticles.push(sp);
+    }
+  }
+
+  // Update smoke
+  for (let i = smokeParticles.length - 1; i >= 0; i--) {
+    const sp = smokeParticles[i];
+    sp.update();
+    if (sp.isDead()) {
+      if (sp.mesh) { sp.mesh.visible = false; sp.mesh.material.opacity = 0; }
+      smokeParticles.splice(i, 1);
+    }
+  }
+
+  THREE_RENDERER.render(THREE_SCENE, THREE_CAMERA);
+}
+
+// =========================================================
+// PRODUCT CANVASES (mini 2D cigs per card)
+// =========================================================
+const PC_THEMES = [
+  { wrap: '#F5EDD6', band: '#C8A96E', filter: '#D4A050', label: 'ABSOLU', dark: false },
+  { wrap: '#1A1A12', band: '#C8A96E', filter: '#C8A050', label: 'OR BLANC', dark: true },
+  { wrap: '#2A1510', band: '#8B1a1a', filter: '#8B4020', label: 'SINGULIER', dark: true },
+];
+
+function initProductCanvas(id, theme) {
+  const canvas = document.getElementById(id);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
+  let t = 0;
+  const smokes = [];
 
   function resize() {
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    canvas.width = canvas.parentElement.offsetWidth || 400;
+    canvas.height = canvas.parentElement.offsetHeight || 600;
   }
-  canvas.width = 600; canvas.height = 600;
+  resize();
 
-  const particles = [];
-  let t = 0;
-
-  class SpiralP {
+  class SP {
     constructor() {
-      this.angle = Math.random() * Math.PI * 2;
-      this.radius = Math.random() * 30;
-      this.baseX = canvas.width / 2;
-      this.baseY = canvas.height * 0.75;
-      this.x = this.baseX + Math.cos(this.angle) * this.radius;
-      this.y = this.baseY;
-      this.vy = -(Math.random() * 1.5 + 0.5);
-      this.life = 0;
-      this.maxLife = Math.random() * 200 + 120;
-      this.size = Math.random() * 60 + 20;
-      this.spiralSpeed = (Math.random()-0.5) * 0.04;
-      this.ascended = 0;
+      this.x = canvas.width/2 + (Math.random()-.5)*6;
+      this.y = canvas.height*.18 - 10;
+      this.vx = (Math.random()-.5)*.5;
+      this.vy = -(Math.random()*.9+.4);
+      this.life=0; this.maxLife=Math.random()*100+70;
+      this.size=Math.random()*18+6;
     }
     update() {
       this.life++;
-      this.ascended += Math.abs(this.vy);
-      this.angle += this.spiralSpeed * (1 - this.ascended / 400);
-      this.radius = Math.min(80, this.radius + 0.3);
-      this.x = this.baseX + Math.cos(this.angle) * this.radius * (this.ascended / 200);
-      this.y += this.vy;
-      this.vy *= 0.998;
-      this.size += 0.4;
+      this.x+=this.vx+Math.sin(this.life*.04)*.4;
+      this.y+=this.vy; this.size+=.25;
     }
     draw() {
-      const ta = this.life/this.maxLife;
-      const a = ta < 0.25 ? ta/0.25*0.2 : (1-ta)*0.2;
-      const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
-      g.addColorStop(0, `rgba(200,190,170,${a})`);
-      g.addColorStop(1, 'transparent');
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
+      const ta=this.life/this.maxLife;
+      const a=ta<.3?ta/.3*.18:(1-ta)*.18;
+      const g=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.size);
+      g.addColorStop(0,`rgba(200,190,170,${a})`);
+      g.addColorStop(1,'transparent');
+      ctx.fillStyle=g;
+      ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);ctx.fill();
     }
-    isDead() { return this.life >= this.maxLife; }
+    isDead(){return this.life>=this.maxLife;}
+  }
+
+  function rr(ctx,x,y,w,h,r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
   }
 
   function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const bg = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width*0.7);
-    bg.addColorStop(0, '#111008');
-    bg.addColorStop(1, '#050505');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const W=canvas.width, H=canvas.height;
+    ctx.clearRect(0,0,W,H);
 
-    // Gold circle at base
-    const cx = canvas.width/2, cy = canvas.height*0.75;
-    const circG = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
-    circG.addColorStop(0, 'rgba(200,169,110,0.15)');
-    circG.addColorStop(0.5, 'rgba(200,169,110,0.05)');
-    circG.addColorStop(1, 'transparent');
-    ctx.fillStyle = circG; ctx.beginPath(); ctx.arc(cx, cy, 60, 0, Math.PI*2); ctx.fill();
+    // BG
+    const bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,theme.dark?'#0a0806':'#080605');
+    bg.addColorStop(1,'#030303');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
 
-    // Thin vertical stem
-    const stemG = ctx.createLinearGradient(0, cy-200, 0, cy);
-    stemG.addColorStop(0, 'transparent');
-    stemG.addColorStop(1, 'rgba(200,169,110,0.3)');
-    ctx.strokeStyle = stemG;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy); ctx.lineTo(cx, cy-200);
-    ctx.stroke();
+    // Glow
+    const cx=W/2, cigH=H*.58, cigW=14, cigX=cx-cigW/2, cigY=H*.18;
+    const glow=ctx.createRadialGradient(cx,H*.5,0,cx,H*.5,H*.45);
+    glow.addColorStop(0,'rgba(200,169,110,.06)');glow.addColorStop(1,'transparent');
+    ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
 
-    if (t % 4 === 0) particles.push(new SpiralP());
-    for (let i = particles.length-1; i >= 0; i--) {
-      particles[i].update(); particles[i].draw();
-      if (particles[i].isDead()) particles.splice(i, 1);
+    // Body
+    const bG=ctx.createLinearGradient(cigX,0,cigX+cigW,0);
+    if (theme.dark) {
+      bG.addColorStop(0,'#150e06');bG.addColorStop(.2,theme.wrap);bG.addColorStop(.5,'#2a1f0a');bG.addColorStop(1,'#080503');
+    } else {
+      bG.addColorStop(0,'#c8b88a');bG.addColorStop(.2,'#f5edd6');bG.addColorStop(.5,'#e8d5a3');bG.addColorStop(1,'#a08050');
+    }
+    ctx.fillStyle=bG; rr(ctx,cigX,cigY,cigW,cigH*.82,3); ctx.fill();
+
+    // Band
+    ctx.fillStyle=theme.band;ctx.fillRect(cigX,cigY+cigH*.44,cigW,3);
+
+    // Filter
+    const fG=ctx.createLinearGradient(cigX,0,cigX+cigW,0);
+    fG.addColorStop(0,'#6b4a10');fG.addColorStop(.5,theme.filter);fG.addColorStop(1,'#6b4a10');
+    ctx.fillStyle=fG; rr(ctx,cigX,cigY+cigH*.82,cigW,cigH*.18,3); ctx.fill();
+
+    // Label
+    ctx.save();ctx.translate(cx,cigY+cigH*.35);ctx.rotate(-Math.PI/2);
+    ctx.fillStyle='rgba(200,169,110,.45)';ctx.font='500 7px Montserrat';
+    ctx.textAlign='center';ctx.fillText(theme.label,0,2);ctx.restore();
+
+    // Ember
+    const ea=ctx.createRadialGradient(cx,cigY-4,0,cx,cigY-4,14+Math.sin(t*.12)*3);
+    ea.addColorStop(0,'rgba(255,130,30,.9)');ea.addColorStop(.4,'rgba(255,60,10,.4)');ea.addColorStop(1,'transparent');
+    ctx.fillStyle=ea;ctx.beginPath();ctx.arc(cx,cigY-4,14+Math.sin(t*.12)*3,0,Math.PI*2);ctx.fill();
+
+    // Smoke
+    if(t%4===0)smokes.push(new SP());
+    for(let i=smokes.length-1;i>=0;i--){
+      smokes[i].update();smokes[i].draw();
+      if(smokes[i].isDead())smokes.splice(i,1);
     }
 
-    // Gold ring
-    ctx.strokeStyle = 'rgba(200,169,110,0.2)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 40 + Math.sin(t*0.05)*5, 0, Math.PI*2);
-    ctx.stroke();
-
-    // Decorative cross lines
-    ctx.strokeStyle = 'rgba(200,169,110,0.06)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 8; i++) {
-      const a = (Math.PI*2/8)*i + t*0.001;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(a)*200, cy + Math.sin(a)*200);
-      ctx.stroke();
-    }
+    // Vignette
+    const vig=ctx.createRadialGradient(cx,H/2,H*.15,cx,H/2,H*.75);
+    vig.addColorStop(0,'transparent');vig.addColorStop(1,'rgba(0,0,0,.75)');
+    ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
 
     t++;
     requestAnimationFrame(draw);
@@ -1574,30 +1180,12 @@ function initRitualCanvas() {
   draw();
 }
 
-// ============================================================
-// PARALLAX
-// ============================================================
-function initParallax() {
-  window.addEventListener('scroll', () => {
-    const sy = window.scrollY;
-    const heroContent = document.querySelector('.hero-content');
-    if (heroContent) {
-      heroContent.style.transform = `translateY(${sy * 0.4}px)`;
-      heroContent.style.opacity = 1 - sy / 600;
-    }
-  });
-}
-
-// ============================================================
-// INIT
-// ============================================================
-function initSite() {
-  initHeroCanvas();
-  initCigaretteCanvas();
-  initFullSmokeCanvas();
-  initProductCanvases();
-  initRitualCanvas();
-  initParallax();
+// =========================================================
+// INIT ALL
+// =========================================================
+function initAll() {
+  initThreeJS();
+  PC_THEMES.forEach((th, i) => initProductCanvas('pc'+i, th));
 }
 </script>
 </body>
